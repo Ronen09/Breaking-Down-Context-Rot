@@ -22,6 +22,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{tikz}
 
 % compaction for a workshop paper
@@ -1087,7 +1088,7 @@ none.
 \section{Additional displacement analyses}
 \label{app:displacement-detail}
 
-\begin{table}[h]
+\begin{table}[H]
   \centering\small
   \caption{\textbf{Distance is the variable that matters} (OLMo-2-Instruct, $n{=}192$ per arm,
   chance $=0.200$, fill $0.688$ in every arm), the numbers behind
@@ -1132,7 +1133,7 @@ cases---\emph{past} the first costly level, not at its edge. That accuracy nonet
 flat under accumulation, while the same share reached by clamping costs points, is itself
 evidence that in-context learning is actively holding accuracy up.
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.98\textwidth]{figures/token_heatmap.pdf}
   \caption{\textbf{Measured final-position attention, token by token} (OLMo-2, all-layer/head
@@ -1148,7 +1149,7 @@ evidence that in-context learning is actively holding accuracy up.
 \section{Precedent details}
 \label{app:precedent-detail}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \begin{subfigure}{0.305\textwidth}\includegraphics[width=\linewidth]{figures/format_erosion.pdf}\end{subfigure}
   \hfill
@@ -1193,7 +1194,7 @@ moves within noise. Reading the exemplars at generation time is not what sustain
 Figure~\ref{fig:closure-dissociation} sets this against the competition rescue: the same
 intervention, opposite outcomes.
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{figures/closure_dissociation.pdf}
   \caption{\textbf{One intervention, opposite outcomes.} The same scale-$0$ generation-time
@@ -1236,7 +1237,7 @@ consume the linearly decodable component.
 \section{Signature details}
 \label{app:signatures-detail}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \begin{subfigure}{0.30\textwidth}\includegraphics[width=\linewidth]{figures/attention_rot.pdf}\end{subfigure}
   \hfill
@@ -1252,7 +1253,7 @@ consume the linearly decodable component.
   \label{fig:signatures}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \begin{subfigure}{0.42\textwidth}\includegraphics[width=\linewidth]{figures/dose_response.pdf}\end{subfigure}
   \hfill
@@ -1314,7 +1315,7 @@ Displacement, its mass sufficiency, the dose-response, the accumulation null, th
 clamp, and the precedent ordering reproduce. The competition penalty does not, and its attention
 signature inverts (Fig.~\ref{fig:qwen-replication}). Details per experiment:
 
-\begin{table}[t]
+\begin{table}[H]
   \centering\small
   \caption{\textbf{Counterfactual patching of the format-instruction state} (Qwen2.5-7B,
   \texttt{code} cell), referenced from \S\ref{sec:mode}. Full-transcript row $n{=}39$,
@@ -1337,7 +1338,7 @@ signature inverts (Fig.~\ref{fig:qwen-replication}). Details per experiment:
   \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{figures/qwen_replication.pdf}
   \caption{\textbf{The causal program replicates on Qwen2.5-7B, except competition.}
@@ -1381,7 +1382,7 @@ first (at share $0.12$), suffix next ($0.09$), the forbidden-phrase rule never
 $[-0.16,-0.03]$ at the deepest level), the zero-sum reallocation that was directionally present
 but n.s.\ on OLMo.
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.55\textwidth]{figures/qwen_system_clamp.pdf}
   \caption{\textbf{Qwen's system clamp collapses compliance duty by duty.} Neutral-context
@@ -1425,46 +1426,58 @@ low-competition arms also sit ${\approx}0.10$ above its own \texttt{local}
 comparisons of arm \emph{levels} inherit that practice benefit. Only within-family gaps are
 interpreted.
 
-\paragraph{Counterfactual instruction patching and the carrier bisection.}
-The instrument behind \S\ref{sec:mode}'s token-level localization: build two transcripts
-identical in filler and probe but differing in the system instruction (an \texttt{ANSWER:}
-prefix format vs.\ a one-line JSON format), capture per-position hidden states from each, and
-patch the recipient's prefill with the donor's states while reading out the two instructed
-formats' teacher-forced log-probability contrast. The estimand is the
-difference-in-differences $\Delta\Delta$ against a \emph{self-patch} baseline, the
-recipient's own open-captured states pushed through the identical procedure, not against the
-unpatched transcripts. Donor states are captured with the system span open while a pure run's
-states form closed, and preflight showed an unpatched baseline confounds that capture
-difference with donor identity (the unrelated-fact control moved as much as the
-counterfactual patch). Against the self-patch baseline the same control is null. The
-specificity control throughout is an unrelated-fact patch: the same instruction with one
-irrelevant clause changed, token-matched. The deep \texttt{code} cell runs at depth 15 with
-the system span closed, in the A$\to$B direction. The full-transcript patch is the stage-1
-run at $n{=}39$, and the bisection cells are $n{=}23$ after one overflow skip. The
-full-transcript patch moves
-the contrast by $\Delta\Delta = -2.488$. Bisecting that effect: the context's assistant turns
-carry $-0.287$, its user turns $+0.165$, and its last $1/2/4$ turns at most $|0.075|$, so every
-content subset is near null, while the chat template's turn delimiters alone
-(\texttt{im\_end}/\texttt{im\_start} glue, no instruction text and no demonstrated answer
-among them) carry $\mathbf{-1.540}$, $62\%$ of the full effect, against a size-matched
-random-position control of $+0.016$. Layer-block patches at all positions give $-1.16$
-(layers $0$--$6$), $-1.59$ ($7$--$13$), $-0.45$ ($14$--$20$), and $-0.11$ ($21$--$27$). The
-blocks overlap in what they carry, so their sum exceeds the full effect. The crossed
-cell (glue positions, layers $7$--$13$ only) carries $-1.051$ ($42\%$) while touching no
-content token and no layer above $13$. The unrelated-fact control is $\le|0.11|$ in
-every quoted cell except two whose counterfactual effects are themselves near null (the
-last-$2$-turns cell, $+0.26$, and the random-position cell, $-0.11$). Waves of this bisection
-that searched \emph{inside} the turns (roles,
-recency) had to come back null: the state rides between them. Two caveats attach to the
-readout. Under closure Qwen emits no canonical format in free generation (none of the $90$
-graded replies across both patch arms), so the estimand lives in the teacher-forced contrast
-alone, with no
-generation-level corroboration in this cell. Closure also drops the recipient's system-span
-identity out, making the two patch directions exact mirror images
+\subsection{Counterfactual instruction patching and the carrier bisection}
+\label{app:patching}
+
+This is the instrument behind \S\ref{sec:mode}'s token-level localization.
+
+\paragraph{The instrument.}
+Build two transcripts identical in filler and probe but differing in the system instruction,
+an \texttt{ANSWER:} prefix format against a one-line JSON format. Capture per-position hidden
+states from each. Then patch the recipient's prefill with the donor's states, and read out the
+two instructed formats' teacher-forced log-probability contrast. The deep \texttt{code} cell
+runs at depth 15 with the system span closed, in the A$\to$B direction. The full-transcript
+patch is the stage-1 run at $n{=}39$, and the bisection cells are $n{=}23$ after one overflow
+skip.
+
+\paragraph{The estimand, and why it is not the obvious one.}
+$\Delta\Delta$ is a difference-in-differences against a \emph{self-patch} baseline: the
+recipient's own open-captured states pushed through the identical procedure. It is not
+measured against the unpatched transcripts. The reason is that donor states are captured with
+the system span open, while a pure run's states form closed. Preflight showed that an
+unpatched baseline confounds that capture difference with donor identity, and the
+unrelated-fact control moved as much as the counterfactual patch. Against the self-patch
+baseline the same control is null.
+
+\paragraph{Where the state lives.}
+The full-transcript patch moves the contrast by $\Delta\Delta = -2.488$. Bisecting by position,
+every \emph{content} subset is near null. The context's assistant turns carry $-0.287$, its
+user turns $+0.165$, and its last $1/2/4$ turns at most $|0.075|$. The chat template's turn
+delimiters alone carry $\mathbf{-1.540}$, $62\%$ of the full effect, against a size-matched
+random-position control of $+0.016$. Those delimiters contain no instruction text and no
+demonstrated answer. Bisecting by depth instead, layer-block patches at all positions give
+$-1.16$ (layers $0$--$6$), $-1.59$ ($7$--$13$), $-0.45$ ($14$--$20$), and $-0.11$
+($21$--$27$). The blocks overlap in what they carry, so their sum exceeds the full effect.
+Crossing the two, glue positions restricted to layers $7$--$13$ still carry $-1.051$ ($42\%$)
+while touching no content token and no layer above $13$. Earlier waves that searched
+\emph{inside} the turns, by role and by recency, had to come back null. The state rides
+between the turns rather than in them.
+
+\paragraph{Specificity control.}
+The control throughout is an unrelated-fact patch, the same instruction with one irrelevant
+clause changed, token-matched. It stays at $\le|0.11|$ in every quoted cell except two, and
+both of those have counterfactual effects that are themselves near null: the last-$2$-turns
+cell at $+0.26$ and the random-position cell at $-0.11$.
+
+\paragraph{Two caveats on the readout.}
+Under closure Qwen emits no canonical format in free generation, in none of the $90$ graded
+replies across both patch arms. The estimand therefore lives in the teacher-forced contrast
+alone, with no generation-level corroboration in this cell. Closure also drops the recipient's
+system-span identity out, which makes the two patch directions exact mirror images
 ($\Delta\Delta_{B\to A}=-\Delta\Delta_{A\to B}$), so the quoted direction is the one
 independent measurement. The full effect is also \emph{sign-inverted} relative to the donor's
-instruction (A-donor states depress the A-format productions), which the localization claim
-does not depend on: the bisection asks \emph{where} the state travels, not which way it
+instruction, in that A-donor states depress the A-format productions. The localization claim
+does not depend on that. The bisection asks \emph{where} the state travels, not which way it
 pushes.
 
 \end{document}

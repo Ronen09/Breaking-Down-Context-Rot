@@ -3,52 +3,28 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "temporal-awareness"
+name = "breaking-down-context-rot"
 version = "0.1.0"
-description = "Detecting and steering temporal awareness in LLMs"
+description = "Breaking Down Context Rot in LLMs: displacement, competition, and precedent"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.12"
 dependencies = [
-    "latents @ git+https://github.com/justinshenk/latents.git",
-    "huggingface_hub>=0.31.0",
     "torch>=2.0.0",
-    "transformer_lens>=3.0.0b1",
     "transformers>=5.0.0",
+    "datasets>=3.0.0",
+    "huggingface_hub>=0.31.0",
+    "accelerate>=1.12.0",
     "numpy>=1.24.0",
-    "scikit-learn>=1.3.0",
-    "matplotlib>=3.7.0",
     "pandas>=2.0.0",
     "scipy>=1.11.0",
-    "seaborn>=0.13.0",
-    "tqdm>=4.65.0",
-    "pyyaml>=6.0",
-    "httpx>=0.27.0",
-    "python-dotenv>=1.0.0",
-    "plotly>=6.5.1",
-    "tabulate>=0.10.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
     "sae-lens>=6.39.0",
-    "peft>=0.19.1",
-    "accelerate>=1.12.0",
-    "ijson>=3.5.0",
-    "tiktoken>=0.5.0",
-    "nnsight>=0.3.0",
-    "pyvene>=0.1.0",
-    "pacmap>=0.9.1",
-    "tensorboard>=2.20.0",
-    "umap-learn>=0.5.11",
-    "huggingface-hub[cli]>=1.7.1",
-    "dash>=2.17.0",
-    "dash-bootstrap-components>=1.5.0",
-    "dash-bootstrap-templates>=1.1.0",
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.27.0",
-    "anthropic>=0.84.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-timeout", "black", "ruff"]
-api = ["openai>=1.0.0", "anthropic>=0.25.0", "tiktoken>=0.5.0"]
+dev = ["pytest", "pytest-timeout", "ruff"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -82,6 +58,17 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"scripts/*" = ["F401"]  # unused imports common in exploratory scripts
+# Drivers are research scripts. The compact one-line guard clauses and grouped
+# imports are deliberate, same reasoning as the E702 ignore above.
+"scripts/*" = [
+    "F401",   # unused imports common in exploratory scripts
+    "E701",   # one-line colon statements, e.g. `if eff < 10: return None`
+    "E401",   # multiple imports on one line
+    "F541",   # f-string without placeholders, used for alignment in print blocks
+]
+# ruff 0.14 reports F821 for `model` and `tokenizer` inside the nested
+# generate_it and generate_base helpers. They are real closures. The compiled
+# code objects list both as freevars, so this is a false positive.
+"scripts/context_fatigue/run_sycophancy_final.py" = ["F401", "E701", "E401", "F541", "F821"]
 "tests/*" = ["F401"]
 "src/**/__init__.py" = ["F401", "F811"]  # unused imports in __init__.py (re-exports)

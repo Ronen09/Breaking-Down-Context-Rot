@@ -1,88 +1,71 @@
-# Paper B repo split — survey and plan (deferred, 2026-08-27)
+# Paper B repo split — done 2026-08-27
 
-Goal: extract Paper B (context fatigue) into its own repo under Ronen's GitHub account.
-Current origin is `justinshenk/temporal-awareness`, so the new repo also moves ownership.
-Survey done 2026-08-27. Split itself deferred until Ronen says go.
+This repo was extracted from the shared multi-paper repo `justinshenk/temporal-awareness`,
+branch `context-fatigue-datasets`, at commit `7c2b359`.
 
-## Coupling is thin: 4 cross-paper import lines total
+## How it was done
 
-Paper B → outside:
-- `src.common.base_schema` (4 uses), `src.common.bootstrap_stats` (2), `src.common.auto_export` (1).
-- `scripts/context_fatigue/run_format_steering.py:42` imports `AdditionSteeringHook, DirectionProjectionHook`
-  from `src.probes.safety.steering_hook`. That file depends only on torch. Copy it wholesale.
-- `scripts/context_fatigue/run_instruction_adherence.py:49` imports `build_cases, select_valid_indices`
-  from `src.probes.lora_icl.ddxplus_cases`. That chain adds `src/probes/ddxplus.py` (stdlib-only).
-  Note: Paper B already has its own `src/probes/context_fatigue/ddxplus_cases.py` (13 imports).
-  Reconcile the near-duplicate instead of copying both.
-- Zero imports from `src/probes/attribution`.
+Two `git-filter-repo` passes over a fresh clone. The first kept the Paper B paths and the
+shared infrastructure, the second stripped `*.npz` from all of history. Result: 626 MB of
+`.git` down to about 10 MB, 198 commits preserved, 320 files tracked.
 
-Paper A → Paper B (fix in the old repo after the split):
-- `scripts/safety/analyze_route_sweep.py:18` imports `pearson` (one-function statistic, inline it).
-- `scripts/safety/run_attention_base_vs_lora.py:26` imports `SelectiveAttentionCapture` (vendor the class).
+The keep-list, for reference if this ever has to be redone:
 
-## What moves
+`context_fatigue_paper/`, `scripts/context_fatigue/`, `src/probes/context_fatigue/`,
+`tests/probes/context_fatigue/`, `results/context_fatigue/`, `data/context_fatigue/`,
+`results/{f90871_steering,random_context,olmo_gradient,olmo_gradient_n35}/`,
+`results/olmo_attention_{instruct,sft,dpo}/`, `data/adversarial/narrativeqa/`,
+`src/common/`, `src/probes/{__init__,ddxplus}.py`,
+`src/probes/safety/{__init__,steering_hook}.py`,
+`src/probes/lora_icl/{__init__,ddxplus_cases}.py`, the tests scaffolding
+(`conftest.py`, the `__init__.py` chain, `tests/common/test_bootstrap_stats.py`), the
+Paper B `tasks/*.md`, and the repo infra files.
 
-| Path | Files | Size |
-|---|---|---|
-| `results/context_fatigue` | 677 | 428M (546 `.npz` in `e3c_hot_close/` + `e1_rows/`) |
-| `data/context_fatigue` | 40 | 4.9M |
-| `scripts/context_fatigue` | 38 | 548K |
-| `context_fatigue_paper` | 20 | 1.1M |
-| `src/probes/context_fatigue` | 13 | 164K |
-| `tests/probes/context_fatigue` | 13 | 148K |
-| stray tracked results dirs | 16 | small |
+One correction was needed mid-split. The first pass missed
+`results/olmo_attention_instruct/` and `results/olmo_attention_dpo/`, which
+`null_statistics.py` and `paper_figures.py` read through the `olmo_attention_{model}`
+pattern. Three tests failed that pass in the original repo. The extraction was redone with
+the corrected list rather than patching the files in, so those artifacts keep their history.
 
-Stray Paper B results outside `results/context_fatigue` (do not miss): `results/f90871_steering`,
-`results/random_context`, `results/olmo_gradient`, `results/olmo_gradient_n35`,
-`results/olmo_attention_sft`.
+## Changes made on top of the extraction
 
-Shared code to duplicate (not worth a shared package): `src/common` minus `null_intervals.py`
-(Paper A only), i.e. `base_schema.py`, `bootstrap_stats.py`, `auto_export.py`, `file_io.py`,
-`__init__.py`. The `src/common/{analysis,math,choice,logging,profiler}` subdirs have no tracked
-files. Ignore them.
+- `src/common/null_intervals.py` removed. It was Paper A only.
+- `pyproject.toml` renamed and cut from 33 dependencies to 11, derived from actual imports
+  rather than guessed. Dropped dash, fastapi, uvicorn, plotly, pacmap, umap-learn, nnsight,
+  pyvene, transformer_lens, peft, tensorboard, and the `latents` git dependency. The ruff
+  and pytest config carried over unchanged except for new per-file ignores.
+- `.gitignore` rewritten to be honest. The old one blanket-ignored `results/`, `data/`, and
+  `tasks/` while 995 files were force-added past it. Now only the raw binary dumps are
+  ignored, and no tracked file is covered by an ignore rule.
+- `Makefile`: `paper-a` dropped, `lint` and `figures` added.
+- CI: dropped the lint path to a directory that does not exist and the mypy job that
+  installed no mypy. Removed eight `--ignore` entries for Paper A test files.
+- `CLAUDE.md` Key Entry Points rewritten for one project.
+- `README.md` rewritten. The old Paper B summary described an earlier framing.
+- `docs/`: `ARTIFACTS.md` written, `SETUP.md` rewritten (the old one referenced
+  `scripts/experiments/`, Stanford Sherlock, and make targets that do not exist),
+  `RELATED_WORK.md` and `CONTRIBUTING.md` dropped as stale.
+- `.env.example` cut to `HF_TOKEN`, dropping unused API keys and the old GCP project IDs.
+- ruff per-file ignores added for the driver scripts. E701, E401, and F541 are pre-existing
+  and deliberate in research scripts. F821 on `run_sycophancy_final.py` is a ruff 0.14 false
+  positive, verified against the compiled code objects, which list `model` and `tokenizer`
+  as closure freevars.
 
-Also needed:
-- `data/adversarial/narrativeqa/narrativeqa_modifications` (check whether the whole dir or a subset).
-- Tests infra: `tests/conftest.py` (repo root on sys.path, `slow` marker, `--skip-slow`),
-  `tests/__init__.py`, `tests/probes/__init__.py`, and `tests/common/test_bootstrap_stats.py`.
-- `pyproject.toml` trimmed to ~15 deps (torch, transformers, datasets, numpy, pandas, scipy,
-  scikit-learn, matplotlib, seaborn, tqdm, sae-lens, huggingface_hub, accelerate, anthropic).
-  Drop dash/fastapi/uvicorn/plotly/pacmap/umap/nnsight/pyvene/transformer_lens/peft and the
-  `latents` git dep. Keep `[tool.pytest.ini_options] pythonpath=["."]` and the ruff config.
-  Regenerate `uv.lock`, do not copy it.
-- `Makefile`: keep `install`, `test`, `paper-b`. Drop `paper-a`.
-- `.github/workflows/ci.yml`: prune the nonexistent `experiments/` lint path and stale `--ignore`s.
-- `CLAUDE.md` forked with the Paper A entry deleted. `tasks/` comes along (CLAUDE.md references it).
-  Paper-B tasks: `context_fatigue_dilution_localization.md`, `context_fatigue_worries.md`,
-  `e3c_competitor_close_brief.md`, `format_patch_brief.md`, `qwen_reproduction.md`,
-  `per_token_capture_brief.md`, `compute_vs_communicate_L20.md`, plus `todo.md`, `lessons.md`,
-  `current_task.md`.
-- `.env.example`, `.gitignore` (see decision 3), `README.md` rewritten, `docs/` checked for
-  Paper B content (11 files).
+## Verification
 
-Paper B scripts are pure argparse. Nothing in `configs/` moves. Prompt templates are inline in
-Python. Datasets (ddxplus, WildChat, mmlu, narrativeqa, gsm8k) download from HuggingFace at runtime.
+- `ruff check src/ scripts/ tests/` passes.
+- `pytest -m "not slow"`: 312 pass, 9 fail. The same 9 fail in the original repo. They read
+  artifact directories that were never committed anywhere. See `docs/ARTIFACTS.md`.
+- The paper builds: 23 pages, no LaTeX errors, no overfull boxes.
+- Every package import resolves, including the two carried-over leaf dependencies.
 
-Layout constraint: no `sys.path` hacks and no `__init__.py` under `scripts/`. Drivers sibling-import
-(`from _cf_common import ...` × 16, `from run_distance_sweep import ...` etc.). The new repo must
-keep "run from repo root with root on PYTHONPATH".
+## Still to do
 
-## Decisions to make before executing
-
-1. **The 428 MB of `.npz`.** They are pattern-ignored yet force-added. Options: (a) history-preserving
-   `git filter-repo` then strip `.npz` blobs and re-add only the ~130 small files (`.csv`, `.json`,
-   `.md`), publishing `.npz` as a GitHub release artifact or keeping them on the A100 box; (b) carry
-   them (history preservation drags all 428 MB of blob history regardless of later deletion).
-2. **History vs fresh start.** `git filter-repo --path` over the ~6 Paper B paths preserves provenance
-   (paper numbers trace to commits) but needs `git-filter-repo` installed (not on this machine yet)
-   and carries the blob weight. Fresh `git init` + copy is clean and small but severs the
-   commit-level provenance chain the audit relies on.
-3. **`.gitignore` honesty.** The old repo ignores `results/`, `data/`, `tasks/` yet tracks 995, 65,
-   19 files there via force-adds. The new repo should whitelist explicitly
-   (e.g. ignore `results/**/*.npz`, track the rest) so intent is visible.
-4. **`ddxplus_cases.py` duplication** (see above).
-
-## Post-split cleanup in the old repo
-
-Inline `pearson` and vendor `SelectiveAttentionCapture` in `scripts/safety/`, then delete the six
-Paper B trees. Not urgent, can lag the split.
+1. Push to GitHub under Ronen's account. `gh` is not installed on this machine, so the
+   empty repo has to be created in the browser first, then `git remote add origin` and push.
+2. Land the recovered artifacts from the A100 box. See the tiered list in `todo.md`. The
+   nine failing tests should pass once the E6 and competition directories are committed.
+3. In the old repo, inline `pearson` in `scripts/safety/analyze_route_sweep.py` and vendor
+   `SelectiveAttentionCapture` in `scripts/safety/run_attention_base_vs_lora.py`. Those are
+   the only two Paper A imports that reach into `src/probes/context_fatigue/`. Then the
+   Paper B trees can be deleted there. Not urgent.

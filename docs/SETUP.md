@@ -1,80 +1,60 @@
-# Setup Guide
+# Setup
 
 ## Prerequisites
 
-- Python 3.10+
-- CUDA-capable GPU with >= 32 GB VRAM (for 8B models) or >= 80 GB (for Qwen3-30B-A3B)
-- HuggingFace account with accepted model licenses (Llama 3.1, DeepSeek-R1)
+- Python 3.12+
+- A CUDA GPU with 80 GB for the full sweeps. The 7B and 9B models fit in less, but the
+  long-context runs fill a 32k window and the attention-capture paths hold a full
+  final-position row, so headroom matters.
+- A HuggingFace token. Gemma and Llama are gated and need accepted licenses.
 
-## Installation
+CPU is enough for the test suite, the analysis scripts, and the figures.
 
-```bash
-# Clone and install
-git clone https://github.com/justinshenk/temporal-awareness.git
-cd temporal-awareness
-pip install -e ".[dev]"
-
-# Copy environment template
-cp .env.example .env
-# Edit .env to add: HF_TOKEN, WANDB_API_KEY
-```
-
-## HPC Setup (Stanford Sherlock)
-
-The experiments are designed to run on SLURM-managed GPU clusters. On Sherlock:
+## Install
 
 ```bash
-# Load required modules
-module load python/3.12.1
-module load py-pyarrow/18.1.0_py312
-
-# Activate the shared virtualenv
-source /home/groups/barbarae/molofsky/ml-env/bin/activate
-
-# For Ouro-2.6B (requires older transformers):
-source /home/groups/barbarae/molofsky/ouro-env/bin/activate
-
-# Set cache directories
-export HF_HOME=$SCRATCH/.cache/huggingface
-export HF_TOKEN=$(cat ~/.cache/huggingface/token)
+uv sync
+cp .env.example .env    # then fill in HF_TOKEN
 ```
 
-## Running Experiments
+## Models
 
-### Single experiment, single model
-```bash
-sbatch scripts/experiments/submit_phase3_refusal.sh Llama-3.1-8B-Instruct
-```
+| Model | Used for |
+|---|---|
+| `allenai/OLMo-2-1124-7B-Instruct` | the main arm for every mechanism |
+| `allenai/OLMo-2-1124-7B-SFT`, `-DPO`, base | the post-training chain |
+| `Qwen/Qwen2.5-7B-Instruct` | cross-family replication, and the competition divergence |
+| `google/gemma-2-9b-it`, `google/gemma-2-9b` | SAE arms |
+| `meta-llama/Llama-3.1-8B-Instruct` | entropy forward check |
 
-### Single experiment, all 7 models
-```bash
-bash scripts/experiments/submit_all_models.sh refusal
-```
+Datasets download from HuggingFace at run time: `aai530-group6/ddxplus`,
+`allenai/WildChat-1M` (streamed), `cais/mmlu`, `deepmind/narrativeqa`, `gsm8k`. The DDXPlus
+condition and evidence tables are vendored in `data/context_fatigue/`.
 
-### Full experiment suite (Wave 1 — no dependencies)
-```bash
-for exp in refusal confound trajectory early_detection attention implicit prompt_dimensions reasoning; do
-    bash scripts/experiments/submit_all_models.sh $exp
-done
-```
+## Running experiments
 
-### Wave 2 (requires refusal results)
-```bash
-for exp in patching steering cross_model causal_bridge safety; do
-    bash scripts/experiments/submit_all_models.sh $exp
-done
-```
-
-## Verification
-
-After experiments complete, verify claims from the paper:
+Drivers are plain argparse CLIs in `scripts/context_fatigue/`. Run them from the repo root
+so that `_cf_common` and the sibling driver imports resolve.
 
 ```bash
-make verify-quick    # Uses cached results
-make verify          # Full re-run (requires GPU)
+uv run python scripts/context_fatigue/run_distance_sweep.py --help
 ```
 
-## W&B Dashboard
+`scripts/context_fatigue/WRITEUP.md` documents what each driver does and the exact
+invocations behind the committed results.
 
-All experiments log to the `patience-degradation` project:
-https://wandb.ai/justinshenk-time/patience-degradation
+## Analysis and figures
+
+The `analyze_*.py` scripts are pure re-analysis and need no GPU. They read from `results/`
+and are the path from artifacts to the numbers in the paper.
+
+```bash
+make figures    # regenerates the paper figures
+make test       # CPU test suite
+make paper      # builds the PDF
+```
+
+## Artifacts
+
+`docs/ARTIFACTS.md` explains what is tracked in git, which raw dumps live on the compute
+box instead, and which directories are still missing and being recovered.

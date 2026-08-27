@@ -1,35 +1,31 @@
-# Register vs Procedure & Context Fatigue
+# Breaking Down Context Rot in LLMs
 
-Two active research projects sharing one codebase (Llama-2-7b attribution stack +
-multi-model context-accumulation harness). Both target *Interpretability as a Science*
-(NeurIPS 2026 workshop).
+Long-context degradation is usually reported as one curve. This work splits it into
+separate mechanisms and asks which of them actually cost anything.
 
-## Paper A — Register, Not Procedure
+Accumulation on its own is the null arm. Filling a window with unrelated turns does not
+by itself hurt accuracy. The mechanisms that do cost something are displacement (evidence
+losing attention mass to the rest of the context), competition (a near-duplicate
+distractor competing with the evidence), and precedent (the model settling into a
+demonstrated answer format and staying there).
 
-Whether a LoRA-installed behavior transports through a fitted pointwise activation map
-depends on what the behavior *is*: a register (an output format/disposition) installs
-through a single-layer linear map; a multi-step procedure (GSM8K arithmetic, MuSiQue
-multi-hop composition) does not — its full-δ oracle recovers, but every pointwise rung
-of the ladder stays near zero.
+Competition is architecture-indexed. It shows a penalty on OLMo-2-7B and closing the
+competitor span recovers 59% of it. The same panel on Qwen2.5-7B shows no penalty, and
+the attention signature inverts. Positive claims about competition rest on OLMo.
 
-- Drivers: `scripts/attribution/` (+ `scripts/safety/` for the refusal arm)
-- Library: `src/probes/attribution/`, `src/probes/safety/`
-- Configs: `configs/attribution/`
-- Artifacts: `results/attribution/` (gitignored provenance store; every paper number
-  traces to a JSON there via `papers/register_vs_procedure/numbers.md`)
-- Paper sources: `papers/register_vs_procedure/`
+Paper sources and the built PDF are in `context_fatigue_paper/`.
 
-## Paper B — Context Fatigue
+## Layout
 
-The "context fatigue" signatures (entropy collapse, attention drift) replicate across
-Qwen-2.5-7B, Llama-3.1-8B, Gemma-2-9B, and the OLMo-2-7B post-training chain — but with
-attention dilution structurally removed (individually localized tasks), there is no
-performance cost. The real hazard is a widening confidently-wrong gap.
-
-- Drivers: `scripts/context_fatigue/`
-- Library: `src/probes/context_fatigue/`
-- Artifacts: `results/context_fatigue/`
-- Paper sources: `context_fatigue_paper/`
+- `scripts/context_fatigue/` — experiment drivers, all plain argparse CLIs. Run them from
+  the repo root. `_cf_common.py` is the shared helper and several drivers sibling-import
+  each other, so the root has to be on `PYTHONPATH`.
+- `src/probes/context_fatigue/` — the library. Attention clamping and capture, context
+  assembly, instruction checks, dilution and head analysis, figure generation.
+- `tests/probes/context_fatigue/` — one test module per library module.
+- `results/context_fatigue/` — the provenance store. Every number in the paper traces
+  here through `context_fatigue_paper/numbers.md`.
+- `context_fatigue_paper/` — LaTeX sources, `numbers.md`, and `AUDIT_2026-08-26.md`.
 
 ## Setup
 
@@ -40,11 +36,28 @@ uv sync
 ## Tests
 
 ```bash
-make test   # CPU-only, no network, seeded
+make test    # CPU only, no network
 ```
 
-## Working docs
+Nine tests currently fail on a fresh clone. They read artifact directories that were never
+committed and are being recovered. See `docs/ARTIFACTS.md` and the recovery list in
+`tasks/todo.md`.
 
-- `tasks/current_task.md` — live experiment ledger
-- `tasks/lessons.md` — experimental-design and analysis lessons
-- `docs/superpowers/specs/2026-08-07-workshop-papers-design.md` — the two-paper design spec
+## Paper
+
+```bash
+make paper      # builds context_fatigue_paper/context_fatigue.pdf
+make figures    # regenerates the figures from results/
+```
+
+## Provenance
+
+`context_fatigue_paper/AUDIT_2026-08-26.md` is the honest record of what holds up. It lists
+every claim that was recomputed from committed artifacts, the corrections that came out of
+that pass, and the gaps that are still open. Read it before trusting a number.
+
+## History
+
+This repo was split out of a shared multi-paper repository on 2026-08-27. Commit history
+for the Paper B paths is preserved. The `.npz` raw state dumps were removed from that
+history because they ran to 422 MB against 3.9 MB for everything else.

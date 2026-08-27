@@ -11,14 +11,11 @@ build/
 venv/
 .venv/
 env/
-tam_env/
 
 # IDE
 .idea/
 .vscode/
 *.swp
-*.sublime-project
-*.sublime-workspace
 
 # OS
 .DS_Store
@@ -27,48 +24,44 @@ Thumbs.db
 # Jupyter
 .ipynb_checkpoints/
 
-# Large model/data files
+# Raw activation and state dumps. These are large and stay on the compute box.
+# See docs/ARTIFACTS.md for where they live and how to re-attach them.
 *.npy
 *.npz
 *.pt
 *.bin
+*.safetensors
 
-# Keep checkpoints (pkl probes, json vectors)
-!results/checkpoints/*.pkl
-!results/checkpoints/*.json
+# Everything else under results/ and data/ IS tracked. Summary JSON, per-turn CSV,
+# and the run notes are the provenance chain behind every number in the paper, so
+# they belong in git. Do not add a blanket results/ or data/ rule here.
 
 # Secrets
 .env
 
-# SLURM / experiment logs (regenerated per run)
+# Logs (regenerated per run)
 logs/
-
-# W&B local cache
+.run_logs/
 wandb/
 
-# Results and data (large, tracked via W&B)
-results/
-data/
-
-# Word docs (personal notes)
-*.docx
-
-# LaTeX artifacts
+# LaTeX build artifacts. Scoped to the paper directory so that run logs and
+# notes living under results/ stay tracked.
+context_fatigue_paper/*.aux
+context_fatigue_paper/*.fdb_latexmk
+context_fatigue_paper/*.fls
+context_fatigue_paper/*.log
+context_fatigue_paper/*.out
+context_fatigue_paper/*.synctex.gz
+context_fatigue_paper/*.bbl
+context_fatigue_paper/*.blg
+context_fatigue_paper/*.toc
 texput.log
 
-# Experiments
-out/
-
-# Other
+# Scratch
 tmp/
 temp/
-git_worktrees/
+out/
 worktrees/
-worktree/
-wrktr/
-tasks/
 
 # Claude Code local session artifacts
 .claude/
-
-.run_logs/

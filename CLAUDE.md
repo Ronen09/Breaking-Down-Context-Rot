@@ -2,16 +2,22 @@
 
 ## Key Entry Points
 
-This repo holds two active projects:
+This repo holds one project, the context fatigue paper ("Breaking Down Context Rot in LLMs").
 
-1. **Register vs procedure** (Paper A): drivers in `scripts/attribution/`, library in
-   `src/probes/attribution/` (+ `src/probes/safety/` for the refusal arm), configs in
-   `configs/attribution/`, artifacts in `results/attribution/` (gitignored — the provenance
-   store; every paper number traces here via `papers/register_vs_procedure/numbers.md`).
-   Paper sources in `papers/register_vs_procedure/`.
-2. **Context fatigue** (Paper B): drivers in `scripts/context_fatigue/`, library in
-   `src/probes/context_fatigue/`, artifacts in `results/context_fatigue/`. Paper sources in
-   `context_fatigue_paper/`.
+- Drivers in `scripts/context_fatigue/`, all plain argparse CLIs. `_cf_common.py` is the
+  shared driver helper, and several drivers sibling-import each other. Run them from the
+  repo root so those imports resolve.
+- Library in `src/probes/context_fatigue/`, tests in `tests/probes/context_fatigue/` at one
+  test module per library module.
+- Artifacts in `results/context_fatigue/`. This is the provenance store, and every paper
+  number traces here via `context_fatigue_paper/numbers.md`. The `.npz` raw state dumps are
+  not tracked. See `docs/ARTIFACTS.md`.
+- Paper sources in `context_fatigue_paper/`. `AUDIT_2026-08-26.md` records which claims are
+  reproducible from committed artifacts and which still have provenance gaps.
+
+`src/probes/safety/steering_hook.py` and `src/probes/lora_icl/ddxplus_cases.py` are carried
+over from the original multi-paper repo because Paper B drivers import them. Do not grow
+those directories.
 
 ## Code Style
 

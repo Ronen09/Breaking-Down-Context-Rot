@@ -1329,8 +1329,9 @@ signature inverts (Fig.~\ref{fig:qwen-replication}). Details per experiment:
   \centering\small
   \caption{\textbf{Counterfactual patching of the format-instruction state} (Qwen2.5-7B,
   \texttt{code} cell), referenced from \S\ref{sec:mode}. Full-transcript row $n{=}39$,
-  bisection rows $n{=}23$. $\Delta\Delta$ $=$ shift of the instructed-formats
-  log-probability contrast, against a self-patch baseline.}
+  bisection rows $n{=}23$.
+  $\Delta\Delta = \Delta\ell_{\mathrm{patch}} - \Delta\ell_{\mathrm{self}}$: the shift of the
+  instructed-formats log-probability contrast $\Delta\ell$ against a self-patch baseline.}
   \label{tab:patch}
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lcc}
@@ -1418,7 +1419,8 @@ account the way OLMo's \texttt{code} arm (full compliance at half \texttt{mmlu}'
 
 \paragraph{Competition: the family divergence.}
 On the same $n{=}365$ panel the penalty is not detected: \texttt{random} $-$ \texttt{near\_dup}
-$= +0.030$ $[-0.016,+0.074]$, and the cross-family difference-in-differences is suggestive but
+$= +0.030$ $[-0.016,+0.074]$, and the family$\times$confusability interaction (the
+cross-family difference-in-differences: OLMo's paired penalty minus Qwen's) is suggestive but
 not significant ($+0.055$ $[-0.015,+0.125]$). The attention signature, however, inverts with
 disjoint intervals: under near-duplicate context Qwen's evidence share \emph{rises}
 ($+0.0071$ $[+0.0062,+0.0080]$ vs.\ OLMo's $+0.0003$ null, orientation matched)---the model
@@ -1451,13 +1453,17 @@ patch is the stage-1 run at $n{=}39$, and the bisection cells are $n{=}23$ after
 skip.
 
 \paragraph{The estimand, and why it is not the obvious one.}
-$\Delta\Delta$ is a difference-in-differences against a \emph{self-patch} baseline: the
+Write $\Delta\ell$ for that log-probability contrast. The estimand is the interaction contrast
+$\Delta\Delta = \Delta\ell_{\mathrm{patch}} - \Delta\ell_{\mathrm{self}}$, a
+difference-in-differences whose baseline is the \emph{self-patch}: the
 recipient's own open-captured states pushed through the identical procedure. It is not
 measured against the unpatched transcripts. The reason is that donor states are captured with
 the system span open, while a pure run's states form closed. Preflight showed that an
 unpatched baseline confounds that capture difference with donor identity, and the
 unrelated-fact control moved as much as the counterfactual patch. Against the self-patch
-baseline the same control is null.
+baseline the same control is null. Identification then requires only additivity, that
+capture-openness shifts both arms' contrasts equally, which sharing one capture-and-splice
+procedure across arms is designed to make true.
 
 \paragraph{Where the state lives.}
 The full-transcript patch moves the contrast by $\Delta\Delta = -2.488$. Bisecting by position,

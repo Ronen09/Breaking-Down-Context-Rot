@@ -76,6 +76,7 @@ precedent, and attention dilution proper is only the first.
 \end{abstract}
 
 \section{Introduction}
+\label{sec:intro}
 
 A recurring worry about long conversations is \emph{context rot}: as turns accumulate, the model
 is said to degrade. The phenomenology is real. On a repeating multiple-choice task,
@@ -86,14 +87,21 @@ the system prompt (correlation with fill $-0.93$) and the current query ($-0.71$
 recent prior cases ($+0.89$), all monotone.
 By every visual diagnostic this is a strong effect that grows with context.
 
-The tempting reading is that length wears the model down. But almost every context-rot
-evaluation embeds the answer-bearing information inside \emph{one long task}---a long document, a
-buried needle, a growing codebase. Longer context then mechanically \emph{dilutes} the relevant
-tokens among irrelevant ones, so a measured degradation conflates the cost of accumulation with
-the cost of the target being harder to attend to (``lost in the middle,''
-\citealp{liu2023lost}). The two cannot be told apart in that setup, and the distinction matters
-in practice: an agent transcript of finished, locally-scoped steps accumulates without diluting,
-and the two accounts predict opposite outcomes for it (Appendix~\ref{app:related}).
+The tempting reading is that length wears the model down. But long context comes in two shapes,
+and they are not the same problem. In the first, \emph{one task spans the whole context}: a
+long document, a buried needle, a growing codebase. Length there mechanically \emph{dilutes}
+the answer-bearing tokens among irrelevant ones, so a measured degradation conflates the cost
+of accumulation with the cost of the target being harder to attend to (``lost in the middle,''
+\citealp{liu2023lost}). In the second, the context is a stream of \emph{localized tasks}, each
+self-contained and already finished: an agent transcript of locally-scoped steps, a session of
+independent questions. Accumulation there grows the context without diluting anything the
+current answer needs. The context-rot literature measures the first shape almost exclusively,
+which is precisely where the two costs cannot be separated. This paper measures the second,
+where they can, and the two accounts predict opposite outcomes for it
+(Appendix~\ref{app:related}). Retrieval is the case between them: a localized stream whose
+current answer depends on evidence sitting back in the context rather than at the query. That
+intermediate case is what \S\ref{sec:displacement} builds, by taking a localized stream and
+moving the evidence back.
 
 We separate the candidate causes inside one harness (Fig.~\ref{fig:framework}) and ask three
 questions. \textbf{RQ1}: does accumulation alone, with the evidence for every answer held at
@@ -190,14 +198,16 @@ them and one causal result for each:
 \subsection{The localized-stream framework}
 \label{sec:framework}
 
-Our harness accumulates \textbf{individually localized tasks}: a stream of self-contained
+Our harness accumulates individually localized tasks, the second shape of \S\ref{sec:intro}: a
+stream of self-contained
 $5$-option medical cases (DDXPlus, \citealp{tchango2022ddxplus}) or discrete factual questions
 (MMLU, \citealp{hendrycks2021mmlu}). Each answer depends only on the \emph{current} question,
 which always sits at the end of the context. Prior turns are never required to answer it.
 Accumulation therefore grows the context without diluting the information the current answer
 needs, and each component of dilution becomes an \emph{independent variable}
 (Fig.~\ref{fig:framework}). Holding the item, the model, the total fill, and the metric fixed,
-we can move the evidence $k$ user turns back (\emph{displacement}), replace the filler with
+we can move the evidence $k$ user turns back (\emph{displacement}, which rebuilds the retrieval
+case inside the stream), replace the filler with
 near-duplicate cases (\emph{competition}), or let the filler's replies demonstrate a competing
 answer shape (\emph{precedent}). Question text is byte-identical across arms, and the filler is
 identical unless it is the treatment. Distance, fill, confusability, and

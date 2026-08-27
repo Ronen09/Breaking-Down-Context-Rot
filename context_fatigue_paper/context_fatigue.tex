@@ -267,7 +267,11 @@ Appendix~\ref{app:precedent-detail}.
 
 \paragraph{Streams and probes.}
 All causal experiments run on OLMo-2-7B-Instruct at seed 42, greedy decoding.
-Appendix~\ref{app:qwen} replicates the program on Qwen2.5-7B-Instruct. A $4$--$32$k window
+Appendix~\ref{app:qwen} replicates the program on Qwen2.5-7B-Instruct. Every mechanism
+experiment reported here runs to a $4$k window, on both families, so that no arm comparison
+is confounded by window size. The exceptions are not mechanism results. The adherence arm
+in \S\ref{sec:accumulation} runs to $32$k, and the WildChat measurements behind the filler
+design run to $16$k and $32$k. A $4$k window
 holds only tens of cases, so we pool many independent accumulation sessions. A
 reversed-question-order control removes difficulty-ordering confounds. Probe options are shuffled
 per item and items with fewer than $5$ options are excluded (DDXPlus lists differentials in rank
@@ -858,6 +862,13 @@ The accuracy null holds for localized tasks.
 Genuinely length-dependent single-task settings are where dilution is the point, and are out of
 scope by design.
 
+Every mechanism experiment runs to a $4$k window (\S\ref{sec:design}). The choice is what makes
+the arms comparable, since per-condition $n$ is bounded by the window and every interval here is
+paired. It also bounds the claims. We separate the mechanisms and order them at $4$k, and we do
+not measure how their relative weights move at the $128$k windows the phrase ``context rot'' is
+usually applied to. Displacement is defined by attention share rather than token count, so it
+carries a prediction at any length, but that prediction is untested here.
+
 \small
 \begin{thebibliography}{9}
 \bibitem[Agarwal et al.(2024)]{agarwal2024manyshot} R.~Agarwal et al. Many-shot in-context learning. \emph{NeurIPS}, 2024.
@@ -1325,8 +1336,11 @@ directions.
 \section{Cross-family replication: Qwen2.5-7B-Instruct}
 \label{app:qwen}
 
-The causal program was re-run on Qwen2.5-7B-Instruct (seed 42, same drivers, panel
-constructions, and drop rules as the committed OLMo runs). Share readouts are all-layer pooled
+The causal program was re-run on Qwen2.5-7B-Instruct (seed 42, $4$k window, same drivers,
+panel
+constructions, and drop rules as the committed OLMo runs). The window matches the OLMo runs,
+so the cross-family contrasts below, the competition divergence included, are not window
+effects. Share readouts are all-layer pooled
 except the distance sweep's, which is layer-24-indexed like OLMo's.
 Displacement, its mass sufficiency, the dose-response, the accumulation null, the system-span
 clamp, and the precedent ordering reproduce. The competition penalty does not, and its attention

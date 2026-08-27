@@ -147,5 +147,8 @@ copy + commit whatever still exists; re-run only what is actually lost.
       (1.5e-8 OLMo / 0.0 Qwen GQA) — currently traces only to commit message ed9e365.
 - [ ] Record the clinical system prompt's token count (tex claims 48) somewhere durable.
 - [ ] Make drivers write the seed into summary.json (Qwen summaries record none).
+- [ ] Make drivers write `max_ctx` into summary.json. Only 3 of 48 summaries record it
+      (e1_rows, qwen_e1_distance_sweep + its preflight). For E3/E5/E6/E7 on both families
+      the 4k window rests on "nobody passed --max-ctx", which is inference, not provenance.
 - [ ] Note the two Qwen mmlu depth-42 passes disagree on natural compliance
       (0.0333 e6_mmlu vs 0.0667 e6_mmlu_recovery) — document, no action.

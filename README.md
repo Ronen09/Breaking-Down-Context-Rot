@@ -12,7 +12,7 @@ Four candidates are separated and tested one at a time.
 - **Displacement** costs. As context grows, the evidence span loses attention mass to the
   rest of the window, and accuracy tracks the mass rather than the token count.
 - **Competition** costs on some model families. A near-duplicate distractor competes with
-  the evidence, and closing the competitor span recovers 59% of the penalty on OLMo-2-7B.
+  the evidence, and closing the competitor span recovers 56% of the penalty on OLMo-2-7B.
 - **Precedent** costs. Once the model has seen a demonstrated answer format, it keeps
   answering in that shape instead of the instructed one, and that state is readable and
   installable.

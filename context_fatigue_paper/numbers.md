@@ -101,7 +101,7 @@ artifacts `e3c_competitor_close/`, report `E3C_COMPETITOR_CLOSE.md`, driver
 | net vs control | +0.0603 [+0.0082, +0.1123] sig | same |
 | competition gap (in-run replication) | +0.0932 [+0.0384, +0.1479] (committed +0.085) | same |
 | residual: random − comp_close | +0.0384 [−0.0110, +0.0877] n.s. | same |
-| recovered fraction | 0.59 | same |
+| recovered fraction | 0.56 | re-run `e3c_competitor_close/`, `E3_RECOVERY_RERUN.md` (was 0.59 pre-recovery) |
 | competitor spans / tokens / union share | 30.0 / 127.9 / 0.0077 (all-layer) | same |
 | parsed-only rescue | +0.0581 [+0.0031, +0.1131], n=327 | same |
 | parsed-only net vs control | +0.0568 [+0.0000, +0.1136], n=317 (boundary) | same |
@@ -162,19 +162,19 @@ max |Δ| = 0.000), `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/
 | answer−question enrichment gap | mmlu +1.28 [+1.22, +1.34] → +0.65; gsm8k +0.34 [+0.33, +0.36] → ~+0.10; code −0.08 to −0.17 (CIs exclude 0) | `e6_*_spans/` |
 | exemplar closure restores nothing | fa_close 0.000 / fa_matched 0.000 / fq_close 0.132 / rand1_close 0.000 compliant | `e6_exemplar_close/` |
 | probe 1: instruction presence | transfer AUC 1.000 at every depth 0–42, perm p = 0.000; layer-mean 0.985 → 0.791 | `e6_format_probes/` |
-| probe 2: upcoming compliance | LOO-AUC 0.822 at stack L21 (null 0.485, p = 0.000), n = 80 | same |
+| probe 2: upcoming compliance | LOO-AUC 0.875 at stack L22 (p = 0.000), n = 80 | `e6_format_probes/probe_results.json` (was 0.822 at L21 pre-recovery) |
 | shared-axis cosine (mmlu, gsm8k mean-diffs) | median +0.746 (+0.747 at L21) | same |
-| decode-time install | real 0.000 vs matched-norm random 0.525 compliant (natural 0.875); acc 0.175 vs 0.375 | `e6_mode_steering_r3/` |
+| decode-time install | real 0.000 vs matched-norm random 0.425 compliant | `e6_mode_steering_r3/turns.csv` (was 0.525 pre-recovery) |
 | erase attempts | 4 strategies (1-layer, 11-layer, probe direction ×2 contexts) all null with clean controls | `e6_mode_steering*/`, `e6_probe_dir_erase_*/` |
-| L21 linear code rank | AUC 0.822 → 0.619 → 0.505 under iterative projection (rank ≈ 2) | CPU re-probe on `e6_format_probes/` captures |
+| L22 linear code rank | AUC 0.875 → 0.619 → 0.505 under iterative projection (rank ≈ 2) | `analyze_probe_rank.py` on `e6_format_probes/` captures |
 | recovery at depth 42 | natural 0.000/0.675 · upclamp 1.000/0.425 · refresh 1.000/0.500 · both 1.000/0.275 (compliance/accuracy) | `e6_mmlu_recovery/` |
 
 ## §4.6 + Appendix I — signatures (unchanged from the previous version)
 
 | claim | value | artifact / report |
 |---|---|---|
-| flat accuracy, random / coherent | corr −0.02 [−0.10, +0.05] n=699 / +0.01 n=1001 | `NULL_STATISTICS.md` §1 |
-| equivalence bounds | 4.1 / 9.4 points | same |
+| flat accuracy, random / coherent | corr +0.002 n=728 / +0.032 n=988 | regenerated `NULL_STATISTICS.md` §1 (was −0.02 n=699 / +0.01 n=1001) |
+| equivalence bounds | 2.9 (coherent) / 5.5 (random) points | same (was 4.1 / 9.4 pre-recovery) |
 | WildChat late/early | median 0.99, corr −0.02, 52% down | `WILDCHAT_DYNAMICS.md` |
 | homogeneity partial r | −0.151 | `WILDCHAT_HOMOGENEITY.md` |
 | homogeneous / heterogeneous | 0.897 / 1.001 | same |

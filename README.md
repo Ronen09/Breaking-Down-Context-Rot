@@ -60,7 +60,7 @@ results/context_fatigue/ the provenance store
 
 data/context_fatigue/    vendored inputs, mostly DDXPlus tables and per-run panels
 docs/                    SETUP.md, ARTIFACTS.md
-tasks/                   working notes, including the recovery list in todo.md
+tasks/                   working notes, including the artifact recovery record in todo.md
 ```
 
 `scripts/context_fatigue/WRITEUP.md` is worth reading for the driver invocations, but note
@@ -142,11 +142,20 @@ what the repo did.
 
 ## Known gaps
 
-`make test` gives 312 passes and 9 failures on a fresh clone. The 9 read artifact
-directories that were never committed, mostly the OLMo E6 erosion program and the original
-competition and head runs. The 2026-08-26 audit found this and `docs/ARTIFACTS.md` lists
-exactly which directories are missing. Recovery is in progress and tracked in
-`tasks/todo.md`. Those tests should pass once the artifacts land.
+`make test` gives 318 passes and 3 failures on a fresh clone (2026-08-31). The 2026-08-26
+audit found nine artifact directories that had never been committed. The OLMo E6 erosion
+program, the original competition and head runs, the E5 raw dirs, the adherence run, and the
+pooled random-context CSV were all re-run or recovered on the A100 box on 2026-08-27 and are
+committed. The regenerated streams are not byte-identical to the lost originals, and every
+cell that moved is recorded in `E6_FORMAT_EROSION.md`, `E3_RECOVERY_RERUN.md`, and
+`numbers.md`.
+
+The 3 failures read one gap the audit missed: `e1_distance_sweep/`, `e1_with_attention/`,
+and `e1f_share_knee/` exist in no commit of this repo or the original. They back Table 3,
+Fig. 2a/b, and the §4.2 ladder and dose-response numbers, which currently trace only to
+`E1_DISTANCE_SWEEP.md` and `E1_MECHANISM.md`. Re-run with `run_distance_sweep.py` (the E1f
+sweep is the `--share-sweep` mode of the same driver, see `E1_MECHANISM.md`) or copy from the
+A100 box. `docs/ARTIFACTS.md` has the detail.
 
 ## History
 

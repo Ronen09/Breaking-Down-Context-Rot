@@ -402,3 +402,30 @@ revised: title now "Starved Evidence, Attended Impostors, Installed Precedent"; 
 one-intervention-two-outcomes contrast (same closure restores nothing in E6). Report
 `E3C_COMPETITOR_CLOSE.md`; numbers.md §4.3 rows added. Open: is the ~40% residual prefill
 interference or instrument slack (verbatim mentions only); per-layer localization of the route.
+
+## 2026-08-31 — Limitations fold + appendix render check
+Appendix "Limitations in full" removed and folded into §6 Limitations (two paragraphs, all
+substantive caveats kept). Appendix letters shift back by one and now match README.md and
+numbers.md (Background=A … Per-head=F, Qwen=J), which had been written against that lettering.
+Appendix set `\raggedbottom` (was stretching text around `[H]` floats, worst on old p16).
+Cost: main text now ends 25 lines into page 10 (was 7 lines over before the fold). Not committed.
+- Concision pass (same day): main text 5965 → 5619 words, ~45 edits across §1–§6, no claim or
+  number changed (numeric-token diff: only the "$1$ point $=0.01$" gloss and the duplicate 2.5×
+  removed). Main text now ends on the LAST line of page 9. Zero slack: any addition to §1–§6
+  spills to page 10 again. Abstract rephrased (316 words) and states localized tasks +
+  displacement-as-retrieval explicitly. §4.3 "11×" replaced by the two measured masses.
+- Repo link + SPAR acknowledgments added. `\repourl` macro switches on the style's `\if@anonymous`
+  (anonymized 4open.science placeholder with XXXX under [dblblindworkshop], real GitHub URL
+  otherwise). Ack (Justin Shenk, SPAR) uses the style's `ack` env, which the style hides in
+  every submission mode and prints under [final]/[preprint]. Verified: [dblblindworkshop] → no
+  ack, anon URL, page 9 intact. [final,sglblindworkshop] → ack + real URL, builds clean.
+  [final] alone errors on \@trackname (style quirk, needs a workshop option alongside).
+  TODO before submission: create the anonymous.4open.science mirror and replace XXXX.
+- README "Known gaps" refresh (2026-08-31): ran `make test` on this box → 318 pass / 3 fail.
+  The audit's 9 gaps are all recovered. Three stale pins fixed from artifacts (E6 d3 acc
+  0.525, d42 natural 0.650, refresh 0.450, code d0 0.825 / n=33; withdrawn dip re-pinned to
+  the recovered n=89 row). Same three stale cells fixed in tex §4.4 (0.475 shallow,
+  0.485–0.675 deep, 0.650 at depth 42) and numbers.md. NEW OPEN GAP the audit missed:
+  `e1_distance_sweep/`, `e1_with_attention/`, `e1f_share_knee/` (Table 3, Fig 2a/b, §4.2)
+  have zero commits anywhere → the 3 remaining failures. Recorded in README, ARTIFACTS.md,
+  todo.md Tier 1b, AUDIT status note. Needs the A100 box or a re-run.

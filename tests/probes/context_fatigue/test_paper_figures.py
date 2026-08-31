@@ -155,12 +155,15 @@ def test_format_erosion_ladders_match_reports():
     assert mm.loc[0, "compliance"] == pytest.approx(0.875)
     assert mm.loc[3, "compliance"] == 0.0
     assert (mm.loc[3:, "compliance"] <= 0.025).all()
-    # the corrected accuracy, not the CSV's stale pre-fix grade (0.075/0.275)
-    assert mm.loc[3, "accuracy"] == pytest.approx(0.500, abs=1e-3)
+    # corrected accuracy (E6_FORMAT_EROSION.md ladder; the 2026-08-27 re-run's stored grade
+    # already carries the lead-line fix, so corrected == stored here)
+    assert mm.loc[3, "accuracy"] == pytest.approx(0.525, abs=1e-3)
     assert mm.loc[7, "accuracy"] == pytest.approx(0.525, abs=1e-3)
     code = pf.load_format_erosion("code").set_index("depth")
-    assert (code["compliance"] >= 0.875).all()
-    assert code.loc[15, "n"] == 8  # overflow-starved cell, annotated in the figure
+    # code never erodes: 0.825 at cold start, >= 0.90 through fill 0.94 (E6_FORMAT_EROSION.md)
+    assert code.loc[0, "compliance"] == pytest.approx(0.825)
+    assert (code.loc[2:, "compliance"] >= 0.90).all()
+    assert code.loc[15, "n"] == 33  # 7 overflow skips, the Appendix E count
     gsm = pf.load_format_erosion("gsm8k").set_index("depth")
     assert gsm.loc[15, "compliance"] == pytest.approx(0.600)
     # enrichment never falls with erosion: every arm ends at or above its cold-start value
@@ -173,10 +176,10 @@ def test_format_recovery_matches_report():
     df = pf.load_format_recovery().set_index("arm")
     assert list(df.index) == pf.RECOVERY_ORDER
     assert df.loc["natural", "compliance"] == 0.0
-    assert df.loc["natural", "accuracy"] == pytest.approx(0.675)
+    assert df.loc["natural", "accuracy"] == pytest.approx(0.650)
     assert (df.loc[["upclamp", "refresh", "both"], "compliance"] == 1.0).all()
     assert df.loc["upclamp", "accuracy"] == pytest.approx(0.425)
-    assert df.loc["refresh", "accuracy"] == pytest.approx(0.500)
+    assert df.loc["refresh", "accuracy"] == pytest.approx(0.450)
     assert df.loc["both", "accuracy"] == pytest.approx(0.275)
 
 

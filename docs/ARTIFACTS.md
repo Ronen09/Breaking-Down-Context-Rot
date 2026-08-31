@@ -32,19 +32,26 @@ reads them.
 To re-attach, copy the directories back under `results/context_fatigue/`. The `.gitignore`
 will keep them untracked, which is intended.
 
-## What is missing and being recovered
+## What was missing, and what still is
 
-Separate problem from the above. These directories were never committed anywhere, in this
-repo or the original, though `numbers.md` and `paper_figures.py` cite them. The 2026-08-26
-audit found this. Nine tests fail on a fresh clone because of it.
+Separate problem from the above. The 2026-08-26 audit found directories that had never been
+committed anywhere, in this repo or the original, though `numbers.md` and `paper_figures.py`
+cite them. All of them were re-run or copied on the A100 box on 2026-08-27 and are now
+tracked: the OLMo E6 erosion program (`e6_{code,gsm8k,mmlu}/` with `spans.csv` inside each,
+`e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/`, `e6_mode_steering*`,
+`e6_probe_dir_erase_*`, `E6_FORMAT_EROSION.md`), the original OLMo competition and head
+artifacts (`e3_competition/`, `e3_attention/`, `e3c_competitor_close/`, `e1_heads_all/`,
+`e3_heads_all/`, `head_structure.json`), the E5 raw dirs, the adherence run
+(`instruction_adherence/`), `random_context_topbin/turns_pooled.csv`, and
+`capture_validation.log`. The re-runs are not byte-identical to the lost originals. The cells
+that moved are listed in `E6_FORMAT_EROSION.md` ("Divergences") and `E3_RECOVERY_RERUN.md`,
+and `numbers.md` marks each with its pre-recovery value.
 
-- The OLMo E6 erosion program: `e6_code/`, `e6_gsm8k/`, `e6_mmlu/`, `e6_*_spans/`,
-  `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/`, `e6_mode_steering*`,
-  `e6_probe_dir_erase_*`, and `E6_FORMAT_EROSION.md`.
-- Original OLMo competition and head artifacts: `e3_competition/`, `e3_attention/`,
-  `e3c_competitor_close/`, `e1_heads_all/`, `e3_heads_all/`.
-- The adherence run, which exists as a prose note with no `summary.json` or `turns.csv`.
-- `random_context_topbin/turns_pooled.csv`, behind the n=699/1001 nulls.
+Still missing, found 2026-08-31 when the suite was re-run against the recovered tree:
 
-The tiered recovery list is in `tasks/todo.md`. Once these land, commit the small files
-here and the nine failing tests should pass.
+- `e1_distance_sweep/` (the OLMo distance ladder, Table 3 and Fig. 2a, and the §4.2 joint
+  fit and parsed-only ladder), `e1_with_attention/` (the E1b evidence-share addendum, the
+  share column of Table 3), and `e1f_share_knee/` (the E1f dose-response, Fig. 2b).
+  Zero commits in any history. Their numbers currently trace only to `E1_DISTANCE_SWEEP.md`
+  and `E1_MECHANISM.md`. Three tests in `test_paper_figures.py` fail on a fresh clone until
+  they are re-run (`run_distance_sweep.py`) or copied from the A100 box.

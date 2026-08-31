@@ -200,12 +200,13 @@ def load_competition() -> pd.DataFrame:
 def _corrected_accuracy(df: pd.DataFrame) -> pd.Series:
     """Per-row accuracy with the lead-line grader fix applied to stored replies.
 
-    The committed E6 CSVs predate the fix for bare-letter-line replies ("B\\n<prose>"), which
-    the original grader scored unparsed *and* wrong -- fabricating an accuracy collapse exactly
-    where compliance collapses. Rows the original grader parsed keep their options-aware grade
-    (its bug was only ever a failure to parse, never a mis-parse); rows it failed on are
-    re-graded with the current checker. Reproduces the corrected report numbers
-    (mmlu depths 3/7: 0.500/0.525, E6_FORMAT_EROSION.md).
+    The original (lost) E6 CSVs predated the fix for bare-letter-line replies ("B\\n<prose>"),
+    which the original grader scored unparsed *and* wrong -- fabricating an accuracy collapse
+    exactly where compliance collapses. Rows the original grader parsed keep their
+    options-aware grade (its bug was only ever a failure to parse, never a mis-parse); rows it
+    failed on are re-graded with the current checker. The committed 2026-08-27 re-run was
+    graded with the fixed checker, so this is a no-op on it (mmlu depths 3/7: 0.525/0.525,
+    E6_FORMAT_EROSION.md). Kept so any pre-fix CSV re-attached later is read the same way.
     """
     regraded = [check_clinical_format(str(r) if pd.notna(r) else "", "")["answer"]
                 for r in df["response"]]

@@ -123,25 +123,25 @@ def test_arm_gap_rejects_empty_arm():
 # ── regression against the committed artifact ───────────────────────────
 
 def test_reproduces_the_published_deep_fill_dip():
-    """§8: the existing deep-fill artifact must still give -0.141 [-0.249, -0.031], n=91.
-
-    This is the number the paper's one positive result rests on, so it is pinned exactly rather
-    than approximately, at the real N_BOOT — the fast-bootstrap fixture used elsewhere would not
-    reproduce the published interval.
+    """The deep-fill dip is WITHDRAWN (NULL_STATISTICS.md §2, E2B_DIP_RESCUE.md) and enters no
+    paper number. This pin keeps the withdrawn value traceable to the committed artifact: the
+    recovered `random_context_topbin/turns_pooled.csv` gives -0.153 [-0.263, -0.042], n=89
+    (the lost original gave -0.141 [-0.249, -0.031], n=91). Pinned at the real N_BOOT — the
+    fast-bootstrap fixture used elsewhere would not reproduce the interval.
     """
     stats = final_bin_regression()
 
-    assert stats["n_top_bin"] == 91
-    assert stats["estimate"] == pytest.approx(-0.141, abs=5e-4)
-    assert stats["lo"] == pytest.approx(-0.249, abs=5e-4)
-    assert stats["hi"] == pytest.approx(-0.031, abs=5e-4)
+    assert stats["n_top_bin"] == 89
+    assert stats["estimate"] == pytest.approx(-0.153, abs=5e-4)
+    assert stats["lo"] == pytest.approx(-0.263, abs=5e-4)
+    assert stats["hi"] == pytest.approx(-0.042, abs=5e-4)
     assert stats["significant"]
 
 
 def test_final_bin_regression_names_its_artifact():
     """A provenance hazard: `final_bin_stats()` with no path silently falls back to a *different*
-    artifact (results/random_context/turns.csv, n=31, -0.187) than the one behind the published
-    number (turns_pooled.csv, n=91, -0.141). The analyzer must name the file it read, so a number
+    artifact (results/random_context/turns.csv, n=31, -0.187) than the one behind the withdrawn
+    number (turns_pooled.csv, n=89, -0.153). The analyzer must name the file it read, so a number
     can never be quoted without knowing which stream produced it.
     """
     stats = final_bin_regression()

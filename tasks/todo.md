@@ -113,42 +113,50 @@ First step for everything below: check the A100 box's gitignored results/context
 copy + commit whatever still exists; re-run only what is actually lost.
 
 ### Tier 1 — headline claims with no committed evidence
-- [ ] Recover or re-run OLMo E6 erosion program: `e6_code/`, `e6_gsm8k/`, `e6_mmlu/`,
+- [x] (2026-08-27) Recover or re-run OLMo E6 erosion program: `e6_code/`, `e6_gsm8k/`, `e6_mmlu/`,
       `e6_mmlu_recovery/`, `e6_exemplar_close/` + report `E6_FORMAT_EROSION.md`
       (driver `run_format_erosion.py`; generation-only, ~40 probes x 3 streams x depths).
       Backs §4.4: 0.875→0.000 ladder, applicability ordering, reversal accuracies,
       enrichment ordering, Fig. 3 data, Appendix E skip counts (2 mmlu / 32 code).
       Also settles the code-arm value at fill 0.78 (tex now says 1.00 per numbers.md;
       superseded VOID predecessor is the only committed trace).
-- [ ] Recover or re-run OLMo E6 probe captures + steering: `e6_format_probes/` (npz +
+- [x] (2026-08-27) Recover or re-run OLMo E6 probe captures + steering: `e6_format_probes/` (npz +
       probe_results.json), `e6_mode_steering{,_r2,_r3}/`, `e6_probe_dir_erase_*/`
       (drivers `run_format_probes.py`, `run_format_steering.py`). Backs probe AUC
       1.000 / 0.822, mode-vector cosine, install/erase asymmetry.
-- [ ] Write + commit the rank≈2 iterative re-probe script (AUC 0.822→0.619→0.505 claim
+- [x] (`analyze_probe_rank.py`) Write + commit the rank≈2 iterative re-probe script (AUC 0.822→0.619→0.505 claim
       currently has NO committed analysis code, independent of the captures).
 
 ### Tier 2 — one arm and the original closure row
-- [ ] Recover or re-run OLMo competition originals: `e3_competition/`, `e3_attention/`,
+- [x] (2026-08-27, `E3_RECOVERY_RERUN.md`) Recover or re-run OLMo competition originals: `e3_competition/`, `e3_attention/`,
       `e3c_competitor_close/` (driver `run_competition_sweep.py`). The surviving
       `e3c_hot_close/` already reproduces random 0.512 / near_dup 0.425 / verbatim closure,
       so the unbacked pieces are the disjoint arm (0.485), the joint fit, the original
       59% closure row, and the cross-family DiD interval. A disjoint-arm + closure re-run
       on the existing panel suffices if the dirs are lost.
-- [ ] Recover per-head CSVs: `e1_heads_all/`, `e3_heads_all/`, `head_structure.json`
+- [x] (2026-08-27) Recover per-head CSVs: `e1_heads_all/`, `e3_heads_all/`, `head_structure.json`
       (backs all Appendix F numbers).
 
 ### Tier 3 — likely just file copies
-- [ ] `results/random_context_topbin/turns_pooled.csv` (behind the n=699/1001 §4.1 nulls).
-- [ ] Qwen 32k adherence run `summary.json`/`turns.csv` (only a prose note is committed).
-- [ ] E5 raw dirs (`e5_neutral/`, `e5_system_clamp/`, profile) behind E5_SYSTEM_CLAMP.md.
+- [x] (n=89 recovered; withdrawn dip re-pinned) `results/random_context_topbin/turns_pooled.csv` (behind the n=699/1001 §4.1 nulls).
+- [x] (`instruction_adherence/`) Qwen 32k adherence run `summary.json`/`turns.csv` (only a prose note is committed).
+- [x] (2026-08-27) E5 raw dirs (`e5_neutral/`, `e5_system_clamp/`, profile) behind E5_SYSTEM_CLAMP.md.
+
+### Tier 1b — found 2026-08-31, missed by the audit
+- [ ] Recover or re-run `e1_distance_sweep/`, `e1_with_attention/`, `e1f_share_knee/`
+      (driver `run_distance_sweep.py`, OLMo, seed 42, n=192/arm; E1f is the share sweep on the
+      common subset n=131). Zero commits in any history. Backs Table 3, Fig. 2a/b, the §4.2
+      joint fit, the parsed-only ladder, and the dose-response. Until then the numbers trace
+      only to `E1_DISTANCE_SWEEP.md` / `E1_MECHANISM.md`, and 3 tests in
+      `test_paper_figures.py` fail on a fresh clone.
 
 ### Cheap hygiene (do alongside any re-run)
-- [ ] Commit a validation log/script asserting capture match on the real models
+- [x] (`capture_validation.log`, measured fp32 bounds) Commit a validation log/script asserting capture match on the real models
       (1.5e-8 OLMo / 0.0 Qwen GQA) — currently traces only to commit message ed9e365.
 - [ ] Record the clinical system prompt's token count (tex claims 48) somewhere durable.
 - [ ] Make drivers write the seed into summary.json (Qwen summaries record none).
 - [ ] Make drivers write `max_ctx` into summary.json. Only 3 of 48 summaries record it
       (e1_rows, qwen_e1_distance_sweep + its preflight). For E3/E5/E6/E7 on both families
       the 4k window rests on "nobody passed --max-ctx", which is inference, not provenance.
-- [ ] Note the two Qwen mmlu depth-42 passes disagree on natural compliance
+- [x] (`QWEN_E6_FORMAT_EROSION.md`) Note the two Qwen mmlu depth-42 passes disagree on natural compliance
       (0.0333 e6_mmlu vs 0.0667 e6_mmlu_recovery) — document, no action.

@@ -15,7 +15,7 @@ seed 42, bootstrap 10,000 draws resampling **cases**.
 | 2a | distance ladder, accuracy + evidence share | `fig_distance_ladder` | `e1_distance_sweep/turns.csv`, `e1_with_attention/turns.csv` |
 | 2b | share→accuracy dose-response | `fig_mass_dose` | `e1f_share_knee/turns.csv` (balanced panel), `e1c_evidence_clamp/` for the diamond |
 | 2c | competition arms | `fig_competition` | `e3_competition/turns.csv` |
-| 3a | E6 compliance ladders + mmlu accuracy | `fig_format_erosion` | `e6_{code,gsm8k,mmlu}/turns.csv`; accuracy re-graded from stored replies per `E6_FORMAT_EROSION.md` (lead-line fix; depths 3/7 = 0.500/0.525) |
+| 3a | E6 compliance ladders + mmlu accuracy | `fig_format_erosion` | `e6_{code,gsm8k,mmlu}/turns.csv`; accuracy re-graded from stored replies per `E6_FORMAT_EROSION.md` (depths 3/7 = 0.525/0.525; the re-run's stored grade already carries the lead-line fix) |
 | 3b | E6 system enrichment by fill | `fig_format_enrichment` | same ladders |
 | 3c | E6 recovery arms at depth 42 | `fig_format_recovery` | `e6_mmlu_recovery/turns.csv` (natural = same run's depth-42 NaN-arm rows) |
 | 4a | attention reallocation vs fill | `fig_attention` | `olmo_attention/` (see `CONTEXT_ROT_ATTENTION.md`) |
@@ -135,16 +135,17 @@ layer 24 — to convert a layer-24-only delta from an experiment whose layers mo
 
 ## Not claimed: the late-window dip
 
-The top-fill-bin dip (−0.141 [−0.249, −0.031], n=91) appeared in an earlier draft and **is not in
-the paper** — no number from it enters the tex, so it has no rows here. It was withdrawn on the
+The top-fill-bin dip (−0.141 [−0.249, −0.031], n=91 in the lost original; the recovered
+`random_context_topbin/turns_pooled.csv` gives −0.153 [−0.263, −0.042], n=89) appeared in an
+earlier draft and **is not in the paper** — no number from it enters the tex, so it has no rows here. It was withdrawn on the
 evidence in `E2B_DIP_RESCUE.md` and `NULL_STATISTICS.md` §2, which remain the record. Do not
 reintroduce it.
 
 ## §4.4–4.5 + Appendix H — precedent (E5 + E6)
 
 E5: `e5_neutral/`, `e5_system_clamp/`, `e5_profile`, report `E5_SYSTEM_CLAMP.md`. Share pooled
-over all 32 layers. E6: `e6_{code,gsm8k,mmlu}/` (+ `_spans/` re-runs, exact replication,
-max |Δ| = 0.000), `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/`,
+over all 32 layers. E6: `e6_{code,gsm8k,mmlu}/` (each with `spans.csv` beside `turns.csv`, the
+2026-08-27 recovery re-run), `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/`,
 `e6_mode_steering{,_r2,_r3}/`, `e6_probe_dir_erase_{mmlu,gsm8k}/`, report `E6_FORMAT_EROSION.md`.
 
 | claim | value | artifact / report |
@@ -156,10 +157,10 @@ max |Δ| = 0.000), `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/
 | demonstrated / undemonstrated arms | 3.00/3 vs 1.00/3 canaries at every clamp level; reply length 8 vs 1 chars, zero variance, 720/arm | `e5_system_clamp/` |
 | compliance ladders | code 0.875 → 1.000 (interpret to depth 12, fill 0.778); gsm8k ≥0.825 to depth 12, 0.600 at depth 15 (fill 0.480); mmlu 0.875 → 0.000 at depth 3 (fill 0.147) | `e6_{code,gsm8k,mmlu}/` |
 | matched fill ≈ 0.5 ordering | code 1.00 / gsm8k 0.60 / mmlu 0.00 | same |
-| mmlu accuracy through the collapse | 0.425 at depth 0; 0.500–0.684 at depths 3–42 | `e6_mmlu/` |
+| mmlu accuracy through the collapse | 0.475 at depth 0; 0.525–0.650 at depths 3–42 (deep range across arms 0.485–0.675) | `e6_mmlu/` (was 0.425 / 0.500–0.684 pre-recovery) |
 | system enrichment (flat-to-rising) | code 1.51 → 3.07; gsm8k 1.51 → 2.04; mmlu 1.50 → 2.14 → 1.47 | same |
 | code compliant at half mmlu's collapsed share | code full compliance at raw share 0.061; mmlu collapsed by 0.11 | `E6_FORMAT_EROSION.md` |
-| answer−question enrichment gap | mmlu +1.28 [+1.22, +1.34] → +0.65; gsm8k +0.34 [+0.33, +0.36] → ~+0.10; code −0.08 to −0.17 (CIs exclude 0) | `e6_*_spans/` |
+| answer−question enrichment gap | mmlu +1.28 [+1.22, +1.34] → +0.65; gsm8k +0.34 [+0.33, +0.36] → ~+0.10; code −0.08 to −0.17 (CIs exclude 0) | `e6_{code,gsm8k,mmlu}/spans.csv` |
 | exemplar closure restores nothing | fa_close 0.000 / fa_matched 0.000 / fq_close 0.132 / rand1_close 0.000 compliant | `e6_exemplar_close/` |
 | probe 1: instruction presence | transfer AUC 1.000 at every depth 0–42, perm p = 0.000; layer-mean 0.985 → 0.791 | `e6_format_probes/` |
 | probe 2: upcoming compliance | LOO-AUC 0.875 at stack L22 (p = 0.000), n = 80 | `e6_format_probes/probe_results.json` (was 0.822 at L21 pre-recovery) |
@@ -167,7 +168,7 @@ max |Δ| = 0.000), `e6_mmlu_recovery/`, `e6_exemplar_close/`, `e6_format_probes/
 | decode-time install | real 0.000 vs matched-norm random 0.425 compliant | `e6_mode_steering_r3/turns.csv` (was 0.525 pre-recovery) |
 | erase attempts | 4 strategies (1-layer, 11-layer, probe direction ×2 contexts) all null with clean controls | `e6_mode_steering*/`, `e6_probe_dir_erase_*/` |
 | L22 linear code rank | AUC 0.875 → 0.619 → 0.505 under iterative projection (rank ≈ 2) | `analyze_probe_rank.py` on `e6_format_probes/` captures |
-| recovery at depth 42 | natural 0.000/0.675 · upclamp 1.000/0.425 · refresh 1.000/0.500 · both 1.000/0.275 (compliance/accuracy) | `e6_mmlu_recovery/` |
+| recovery at depth 42 | natural 0.000/0.650 · upclamp 1.000/0.425 · refresh 1.000/0.450 · both 1.000/0.275 (compliance/accuracy) | `e6_mmlu_recovery/` (natural 0.675, refresh 0.500 pre-recovery) |
 
 ## §4.6 + Appendix I — signatures (unchanged from the previous version)
 

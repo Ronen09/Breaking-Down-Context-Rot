@@ -321,3 +321,29 @@ are non-robustness, not refutation.
 - No semicolons in anything I write for this project (paper tex, notes, replies). Full
   simple sentences. Period and a new sentence instead of clause-stacking. Colons for
   definitions are fine. Don't rewrite Ronen's pre-existing prose unless asked.
+
+## 2026-09-02: paper style pass
+- "Justification style" (user's term) = argumentative connectives (so/therefore/which is
+  why/"That null is narrower than it looks") + emphasis-led definitions. Clarified via
+  AskUserQuestion before rewriting; do that for ambiguous style asks.
+- \emph is banned in this paper's prose. Bibliography venue italics stay.
+- Appendix maths goes in display blocks, not inline; user also wants the clamp defined
+  mathematically in the main text.
+- The tex already carries the author's own \looseness=-1 marks from the nine-page tightening.
+  Never strip \looseness globally - I removed 14 when only 8 were mine and had to restore from
+  git. Reset-to-HEAD + re-apply intended edits is the safe recovery.
+
+## 2026-09-02 (round 2): defensive positioning
+- The user's word for the paper's failure mode: "defensive positioning" — justifying negative
+  results as non-issues ("we claim X, not Y", "out of scope by design", "One qualification:",
+  "This null has a limited scope"). Fix: report a null with its resolving power ("excludes
+  declines above 2.9 points") and let the boundary be a finding, not an apology.
+- Do NOT compute a derived quantity and typeset it as if measured. I briefly put a "1.01"
+  penalty fraction into a table by dividing two numbers from different panels. numbers.md's
+  rule: no number enters the tex without a row there.
+- Check per-row n before writing a blanket n into a caption; tab:mass rows came from panels
+  of n=192 and n=131.
+- Table hygiene (from the ICLR reference paper): one data type per column, no blank grouping
+  cells, prose belongs in the caption.
+- cwd persists across Bash calls in this session and silently broke several heredocs. Use
+  absolute paths in scripts that edit files.

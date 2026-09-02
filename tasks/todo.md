@@ -1,162 +1,157 @@
-# Qwen reproduction — execution todo (this box: A100-80GB, fresh, 2026-08-24)
+# Task: De-justify the paper's prose (2026-09-02)
 
-Plan: /root/.claude/plans/checkout-tasks-qwen-reproduction-md-and-polished-adleman.md
-Scope per user: OLMo entirely out of scope; Q0 gate waived; run Q1→Q7 here.
-
-## Phase 0 — bootstrap
-- [x] Install uv
-- [x] `uv sync` (.venv from uv.lock; + `--extra dev` for pytest)
-- [x] Download online: Qwen2.5-7B-Instruct, cais/mmlu (all), gsm8k (main), ddxplus test.csv (15G cache)
-- [x] `pytest -q`: 669 passed; 9 failed = FileNotFoundError on OLMo artifacts in gitignored
-      results/ (absent on fresh clone, expected; OLMo out of scope)
-- [x] Offline bf16 load + generation smoke OK (28 layers, GQA 28q/4kv; default Qwen system
-      prompt confirmed injected when none supplied)
-
-## Phase 1 — queue (preflight → inspect → full run → monitor)
-- [x] Q1 E1 distance sweep: CONFIRMED, fully monotone ladder 0.630→0.469, all paired gaps
-      SIG; distance β −0.0061 SIG; local flat with fill; share falls with distance & tracks
-      acc. Report: results/context_fatigue/QWEN_E1_DISTANCE_SWEEP.md. Parse rate 1.0.
-- [x] Q2 E1c: CONFIRMED, sufficiency 106.7% (residual −0.010 [−0.057,+0.037] ≈ 0).
-      Naturals: local 0.0390, back_20 0.0088. Report: QWEN_E1C_EVIDENCE_CLAMP.md.
-- [x] Q3 E1f: CONFIRMED, smooth monotone dose-response, no knee, first SIG drop at 0.017,
-      slope +10.4 ≈ Q1's +10.7. Report: QWEN_E1F_SHARE_SWEEP.md.
-- [x] Q4: penalty not detected (DiD vs OLMo ns per verification pass); attention
-      INVERSION established (near_dup raises evidence share); E3c closure null.
-      Report: QWEN_E3_COMPETITION.md (verified+corrected by OLMo box).
-- [x] Q5: graded compliance collapse, canary-ordered (prefix<suffix<forbid-never),
-      accuracy rises. Report: QWEN_E5_SYSTEM_CLAMP.md.
-- [x] Q6: applicability ordering + answer-reading signature confirm; erosion staged
-      (marker at 3 turns, SUPPORTING partial); gsm8k/code never erode; refresh 1.000,
-      upclamp 0.733; arm shares straddle Q5 thresholds. Report: QWEN_E6_FORMAT_EROSION.md.
-- [x] Q7: accumulation null confirms (slope ns to full window); adherence canaries
-      covered by committed run. Report: QWEN_RANDOM_CONTEXT.md. QUEUE COMPLETE.
-
-Grader watch-item: extract_mcq_answer \b([ABCDE])\b fallback vs Qwen verbosity
-(Q1/Q4/Q5/Q7; Q2/Q3 are letter-logit and safe). Validate on real replies each preflight.
-
-## E7 format patch (tasks/format_patch_brief.md, interleaved on this box)
-- [x] SpanActivationPatch instrument + 28 tests (commit 05f6030)
-- [x] Driver run_format_patch.py Stage 1; preflight caught two real issues:
-      rendered-length twin matching (isolated token counts misalign by template merge),
-      and self-patch baselines (open-capture vs closed-baseline confound — unrelated
-      control moved as much as the counterfactual patch). Commit d9d8beb.
-- [ ] E7 mmlu arm (depth 42) RUNNING; then code arm (depth 15, fill-matched)
-- [ ] Stage 2 bisection only after Stage-1 read
-- NOTE: keep everything local (user 2026-08-24); ssh agent exists but no push for now
-
-## E7 Stage-2 bisection (Qwen code cell, dd_full = -2.488; n=24/cell, A→B only)
-- [x] Wave 1 position marginals: assistant_turns -0.287, user_turns +0.165 — neither
-      role carries it; suspect distributed or chat-template glue tokens (excluded from
-      both role subsets)
-- [x] Wave 2 last_1/last_2/last_4 complete (2026-08-25 read): recency positions carry
-      ~nothing of dd_full=-2.488 — dd_ab −0.075 / +0.0006 / −0.036. With Wave 1's role
-      null, suspicion narrows to distributed/template-glue. Artifacts
-      qwen_e7_bisect_pos_last_{1,2,4}. NOTE: E3c' preflight independently found 43% of
-      context-body final-position mass on template glue/turn boundaries (OLMo) —
-      convergent with the glue suspicion; see per-token program below.
-- [x] Wave 3-4 + template + controls COMPLETE (report QWEN_E7_BISECTION.md). LOCALIZED:
-      template glue positions carry −1.540 of dd_full −2.488 (62%; size-matched random
-      control +0.016); layers 0-6/7-13/14-20/21-27 = −1.16/−1.59/−0.45/−0.11; crossed
-      template x 7-13 = −1.051 (42%). Content subsets ~null (waves 1-2). The carrier is
-      the transcript skeleton, lower half of the stack — converges with E3c' glue mass
-      and E6' closure nulls.
-- [x] OLMo follow-up CONFIRMS the channel (e7_bisect_pos_template_olmo, n=100): glue-only
-      dd_ab +0.092 / dd_ba −0.090 vs full-patch +0.056 / −0.071, controls −0.011 both —
-      OLMo's whole (small, non-inverted) effect rides the template positions. Folded into
-      QWEN_E7_BISECTION.md, the paper (mode + Limitations), numbers.md. BISECTION THREAD
-      CLOSED; open refinement: periodicity-matched content control.
-      NOTE: "no push" instruction superseded 2026-08-25 — user asked to push; branch is
-      being pushed after each fold-in commit.
+User direction:
+- Abstract: state experiments ran on OLMo-2-7B-Instruct; summarize what did/didn't reproduce
+  on Qwen2.5-7B-Instruct. [DONE]
+- Remove argumentative connectives (courtroom tone) -> plain declarative. [DONE]
+- Remove ALL \emph in prose (bibliography venue italics kept). [DONE: 77 unwrapped, 0 left
+  outside thebibliography]
+- Whole paper + appendices; appendices natural prose + display math blocks. [DONE: capture
+  softmax row + estimand DiD as display blocks]
+- Cut the §2.2 raw-share/goal-accessibility aside; mathematically define the span clamp in
+  §2.3 (display equation for clamped weights + odds scaling). [DONE]
 
 ## Review
-Q1-Q7 queue complete 2026-08-24, all reports + artifacts pushed. E7 Stage 1 both
-families pushed. Verification loop with OLMo box caught two report errors (lessons
-captured). Bisection is the open thread.
+- 0 LaTeX errors, 0 overfull boxes; 22 pages total.
+- Page budget: body now ends ~5 lines into page 10 (was exactly 9 pages at HEAD). The added
+  abstract sentences + clamp equation cost the slack. Flag to user; compress on request.
+- Kept: all numbers/claims/stats parentheticals, \textbf, author's 6 \looseness marks.
+- Descriptive ", so " explanations (11 instances) intentionally kept - they report causal
+  facts, not argue.
 
-## Per-token capture program (brief: tasks/per_token_capture_brief.md; EXECUTING 2026-08-25)
-Box: A100-80GB, OLMo-2-7B-Instruct cached (Stages 1-3 target the OLMo numbers per brief).
-- [x] Stage 0: library done test-first — `stacked_rows`/`mean_attention_row` (capture),
-      `select_hot_token_spans`, `SpanAttentionClamp(window=all|prefill|decode)`,
-      `PerHeadSpanAttentionClamp`, `solve_per_head_biases` (closed-form),
-      `measure_span_share_by_head`, `solve_per_head_pattern` (iterative, all-layer).
-      +44 tests; capture/clamp suite 121 green; drivers gained `--store-rows`
-      (competition + distance sweeps, npz per probe: fp16 mean row + ids + span meta).
-- [x] Stage 1: E3c′ COMPLETE (report E3C_HOT_CLOSE.md, artifacts e3c_hot_close/ incl.
-      365 stored rows). Verdict: residual is NOT instrument slack — anchors reproduce
-      (penalty +0.088 SIG, verbatim net +0.069 SIG vs committed +0.060); content-hot
-      closure (0.087 mass, 11x verbatim's 0.0076) nets +0.003 ns; as-measured hot set =
-      0.42 mass on template glue, closing it nets −0.175 SIG with parse 0.85 and
-      prose-style replies → glue is load-bearing precedent structure (converges with E7
-      Wave 1-2 nulls). Competition penalty follows token CONTENT, not received mass.
-      All contrasts survive parsed-only.
-- [x] Stage 2: E1d′ COMPLETE (report E1D_HEAD_PATTERN.md, artifacts e1d_head_pattern/).
-      Per-head pattern restoration recovers 0.235 [−0.158, 0.588] vs uniform 0.375
-      [0.167, 0.654] in-session (anchors committed 0.28); per-head − uniform −0.021 ns
-      with faithful pattern install (err 0.004, bias_sd 1.22). Head-uniformity is NOT
-      the instrument limitation → within-span token pattern or a second positional
-      channel remain.
-- [x] Stage 3: E6′ COMPLETE (report E6_CLOSE_WINDOWS.md, artifacts e6_close_windows/).
-      Installation test NULL both windows: compliance 0.000 under prefill-only, decode-only,
-      all-window fa closure (anchors reproduce: d0 0.875, fq_close 0.10≈0.132) — the mode
-      does not route through exemplar-answer reading at all. Sharp positive: the fa
-      channel's ACCURACY value is entirely prefill-borne (−0.175 SIG prefill-only, exactly
-      0.000 item-for-item decode-only; all-window ≡ prefill-only item-for-item).
-- [x] Stage 4: COMPLETE. 160 rows captured (e1_rows/rows, 32 probes x 5 arms, 1 session);
-      `make_paper_figures.py --only appendix` now emits token_heatmap.pdf (real
-      local-vs-back_10 pair, shares 0.0883 vs 0.0522 annotated from the stored rows; the
-      bright periodic stripes are the template glue — the E3c' finding is visible raw).
-      Builder registered conditionally so clones without rows still build.
+## Round 2 (2026-09-02): defensive positioning, CIs, tables
 
-## Artifact recovery / re-runs (from 2026-08-26 full-paper audit — see context_fatigue_paper/AUDIT_2026-08-26.md)
+User feedback: (1) prose was defensively positioned - negative results excused with "we are
+not proving that phenomenon"; (2) inline CIs are hard to read; (3) the displacement mass
+table made no sense; (4) use percentages for the mass interventions. Reference throughout:
+the ICLR 2026 workshop paper `15_Single_Position_Interventio.pdf`, read in full (20pp).
 
-First step for everything below: check the A100 box's gitignored results/context_fatigue/ —
-copy + commit whatever still exists; re-run only what is actually lost.
+What that paper actually does with uncertainty, and what we adopted:
+- CIs appear in exactly two places (headline table + one appendix collection table). Every
+  other statistic is a bare point estimate. Figures are for SHAPES (sweeps, thresholds);
+  discrete effect sizes with intervals go in tables. There is no forest plot anywhere.
+- Tables: one metric column, bold on the number the row exists to show (that is the
+  significance flag), prose only in an explicit Note column, one-sentence captions.
 
-### Tier 1 — headline claims with no committed evidence
-- [x] (2026-08-27) Recover or re-run OLMo E6 erosion program: `e6_code/`, `e6_gsm8k/`, `e6_mmlu/`,
-      `e6_mmlu_recovery/`, `e6_exemplar_close/` + report `E6_FORMAT_EROSION.md`
-      (driver `run_format_erosion.py`; generation-only, ~40 probes x 3 streams x depths).
-      Backs §4.4: 0.875→0.000 ladder, applicability ordering, reversal accuracies,
-      enrichment ordering, Fig. 3 data, Appendix E skip counts (2 mmlu / 32 code).
-      Also settles the code-arm value at fill 0.78 (tex now says 1.00 per numbers.md;
-      superseded VOID predecessor is the only committed trace).
-- [x] (2026-08-27) Recover or re-run OLMo E6 probe captures + steering: `e6_format_probes/` (npz +
-      probe_results.json), `e6_mode_steering{,_r2,_r3}/`, `e6_probe_dir_erase_*/`
-      (drivers `run_format_probes.py`, `run_format_steering.py`). Backs probe AUC
-      1.000 / 0.822, mode-vector cosine, install/erase asymmetry.
-- [x] (`analyze_probe_rank.py`) Write + commit the rank≈2 iterative re-probe script (AUC 0.822→0.619→0.505 claim
-      currently has NO committed analysis code, independent of the captures).
+Done:
+- [x] De-hedged 9 passages (S4.1/4.2/4.3, S6 Limitations, App G/J). Nulls now reported with
+      their resolving power instead of defended.
+- [x] tab:mass rebuilt in PERCENTAGE POINTS (+15.1 not +0.151), with an "of penalty" column
+      in % (91%, 28%). Killed the unclosed-paren caption, the blank grouping cell, and the
+      column that mixed numbers with prose.
+- [x] tab:fits: 4 causal rows, units in the predictor cell, bold marks intervals excluding
+      zero. The observational beta=-11.2 moved back to S4.2 prose as a bare number.
+- [x] Table 3 (closures) converted to % mass and points; dissociation prose matched.
+- [x] Six inline CIs converted to points and collected in App F tab:intervals.
+- [x] S2.3 clamp: dropped the one-use share(A;b) notation for the standard odds form in s.
+- [x] S4.5 (the mode) was a 45-line wall of prose carrying 9 separate results. Restructured
+      around tab:mode: 9 operations in two labelled blocks (attention to the demonstrated
+      answers vs the residual stream), each with outcome + what it shows. Prose cut to two
+      paragraphs of interpretation. The table IS the section's argument.
+- [x] hidelinks (the red link boxes).
+- [x] Reverted the fig_mass_forest experiment entirely (figure, builder, test, numbers.md
+      row) once the reference paper showed a table is the right form. No dead code left.
 
-### Tier 2 — one arm and the original closure row
-- [x] (2026-08-27, `E3_RECOVERY_RERUN.md`) Recover or re-run OLMo competition originals: `e3_competition/`, `e3_attention/`,
-      `e3c_competitor_close/` (driver `run_competition_sweep.py`). The surviving
-      `e3c_hot_close/` already reproduces random 0.512 / near_dup 0.425 / verbatim closure,
-      so the unbacked pieces are the disjoint arm (0.485), the joint fit, the original
-      59% closure row, and the cross-family DiD interval. A disjoint-arm + closure re-run
-      on the existing panel suffices if the dirs are lost.
-- [x] (2026-08-27) Recover per-head CSVs: `e1_heads_all/`, `e3_heads_all/`, `head_structure.json`
-      (backs all Appendix F numbers).
+Caught in review:
+- S3 claimed "points are the scale of the joint-fit coefficients". False: beta_distance
+  = -0.0076 is a FRACTION per turn (x20 turns ~ 15 points, matching the ladder). Corrected.
+- A dose-response sentence still cited tab:mass's old fraction scale (0.017); now 1.7 points.
 
-### Tier 3 — likely just file copies
-- [x] (n=89 recovered; withdrawn dip re-pinned) `results/random_context_topbin/turns_pooled.csv` (behind the n=699/1001 §4.1 nulls).
-- [x] (`instruction_adherence/`) Qwen 32k adherence run `summary.json`/`turns.csv` (only a prose note is committed).
-- [x] (2026-08-27) E5 raw dirs (`e5_neutral/`, `e5_system_clamp/`, profile) behind E5_SYSTEM_CLAMP.md.
+Verification: 0 LaTeX errors, 0 overfull boxes, 0 undefined refs, 0 \emph outside the
+bibliography, 0 inline CIs left in body prose. Tests 311 passed / 3 failed, the 3 being
+PRE-EXISTING (confirmed by stashing and re-running at HEAD) missing-artifact failures for
+`e1_distance_sweep/` and `e1f_share_knee/` documented in docs/ARTIFACTS.md.
 
-### Tier 1b — found 2026-08-31, missed by the audit
-- [ ] Recover or re-run `e1_distance_sweep/`, `e1_with_attention/`, `e1f_share_knee/`
-      (driver `run_distance_sweep.py`, OLMo, seed 42, n=192/arm; E1f is the share sweep on the
-      common subset n=131). Zero commits in any history. Backs Table 3, Fig. 2a/b, the §4.2
-      joint fit, the parsed-only ladder, and the dose-response. Until then the numbers trace
-      only to `E1_DISTANCE_SWEEP.md` / `E1_MECHANISM.md`, and 3 tests in
-      `test_paper_figures.py` fail on a fresh clone.
+## Round 3 (2026-09-02): 9-page budget + precedent section
 
-### Cheap hygiene (do alongside any re-run)
-- [x] (`capture_validation.log`, measured fp32 bounds) Commit a validation log/script asserting capture match on the real models
-      (1.5e-8 OLMo / 0.0 Qwen GQA) — currently traces only to commit message ed9e365.
-- [ ] Record the clinical system prompt's token count (tex claims 48) somewhere durable.
-- [ ] Make drivers write the seed into summary.json (Qwen summaries record none).
-- [ ] Make drivers write `max_ctx` into summary.json. Only 3 of 48 summaries record it
-      (e1_rows, qwen_e1_distance_sweep + its preflight). For E3/E5/E6/E7 on both families
-      the 4k window rests on "nobody passed --max-ctx", which is inference, not provenance.
-- [x] (`QWEN_E6_FORMAT_EROSION.md`) Note the two Qwen mmlu depth-42 passes disagree on natural compliance
-      (0.0333 e6_mmlu vs 0.0667 e6_mmlu_recovery) — document, no action.
+Body was running 16 lines onto page 10. Target: body ends on p9, References at top of p10
+(which is what HEAD did). Restored, with 0 overfull boxes.
+
+- [x] tab:fits (joint fits) moved from body to App F. It cost ~12 body lines to remove 3
+      inline CIs; as supporting detail it belongs with the other stats tables, which is also
+      where the ICLR reference paper keeps them (its Tables 8-28).
+- [x] S4.4 (precedent) restructured around tab:precedent: 11 conditions in 3 labelled blocks
+      (no assistant turn / accumulated filler at matched fill / depth-42 reversal), each with
+      compliance, accuracy, and what it shows. Prose cut to 3 paragraphs that no longer
+      restate the numbers the table carries.
+      NOTE: S4.4's figure (fig:erosion) is stranded in App I, which is WHY the section read as
+      a wall. Left there for page reasons; moving it into the body would cost ~18 lines.
+- [x] Conclusion: dropped 2 citation clauses in the bullets. Every reference removed is still
+      cited elsewhere (checked: zhang2023pasta in S2.3, hendel2023taskvectors in S4.5, the
+      rest in App A), so no bibliography entry was orphaned.
+- [x] Limitations compressed ~35 -> ~20 lines. Cut the closing scope sentence (the abstract
+      and S1 both already state the localized-stream scope) and the "unlocalized as a
+      direction" clause (tab:mode states it as a row).
+
+One-table-per-section is now the pattern for the three dense results sections: tab:precedent
+(4.4), tab:mode (4.5), tab:closures (4.3).
+
+## Round 4: abstract restructured on the reference paper's plan
+
+Their abstract is 222 words to our 387. The gap was hierarchy, not number density (they
+actually use MORE numbers than we did). Devices adopted:
+- One spine instead of a flat list. Ours was 10 co-equal findings; now the accumulation null
+  is the claim and the three mechanisms are its explanation.
+- The null promoted, not just reported ("That null is the paper's starting point:").
+- Exactly 2 bolded anchors (nothing / 56%), their 0%-vs-96% device.
+- Em-dash carrying the prefill-vs-generation dissociation inside one sentence.
+- Apparatus demoted: two methodology sentences collapsed into one clause.
+- Three paragraphs, so the spine is visible in the layout.
+
+Deliberately NOT adopted: their sell register ("striking", "Crucially", "fundamentally
+reshaping our understanding"). Wrong voice for this paper.
+
+387 -> 306 words, 30 -> 27 lines. Claims and numbers unchanged; "bounded nulls" replaced with
+the actual bounds (2.9 / 5.5 points), and competition's 8.5 points named in the abstract for
+the first time. Still 9 pages.
+
+## Round 5: appendix (no length limit — informativeness over concision)
+
+Modelled on the reference paper's appendix, which is 18 short subsections each with one small
+table plus a numbered "Key observations" list, a hyperparameter table (its Table 27), and an
+explicit reproducibility section. Ours was long `\paragraph` prose with numbers embedded and
+almost no floats: 4 of 10 appendix sections had zero tables or figures.
+
+Added (appendix now 8 tables / 7 figures, up from 5 / 7):
+- [x] tab:crossfamily cells are all numeric (user: "numbers instead of flat with fill"); the two rows where the families recorded different statistics are named as such in the caption.
+- [x] tab:crossfamily — THE missing table. The Qwen appendix was 186 lines of prose whose one
+      job is answering "what replicated?". Now 13 claims x 2 families x verdict, split by a
+      rule into the 10 that hold and the 3 competition rows that do not. The competition
+      paragraph was then deduped against it and now carries only the masked-channel reading.
+- [x] tab:filler — the three filler streams as a spec table (source, demonstrated reply,
+      applicability, fill/turn), their Table 8 idiom. Applicability is the design variable and
+      was previously buried mid-paragraph.
+- [x] tab:config — run configuration in one place (models, seed, decoding, windows, generation
+      budgets, bootstrap, share definition, overflow policy), their Table 27 idiom. These were
+      scattered across four sections.
+- [x] tab:heads — the per-head measurement as displacement vs competition columns, replacing
+      a dense 22-line prose block with no float. Added the point that layer 24 is deliberately
+      unexceptional, so the readouts are diagnostics rather than a claim about where retrieval
+      happens.
+- [x] Appendix accuracy contrasts converted to percentage points, matching the body's
+      convention (was mixing "9.4 accuracy points" with "+0.026 [-0.042,+0.094]" in one
+      sentence).
+
+Body unaffected: still 9 pages, References at the top of page 10.
+
+## Round 6: J.1 (counterfactual patching) + run configuration
+
+- [x] Run configuration reverted from a table to prose (user: a settings list is not a
+      comparison). Deduped against the "Probe construction" paragraph directly above it, which
+      already carried the probe spec and generation budgets AND their rationale.
+- [x] J.1 math written out. Delta-ell was previously never defined - the text said "the two
+      instructed formats' teacher-forced log-probability contrast" and left it there. Now:
+      Delta-ell(T) = log P(y_A|T) - log P(y_B|T) as a display equation; h_P(T) and T <- h
+      defined for the capture-and-splice; the estimand as a labelled difference-in-differences
+      with underbraces naming both arms; "share of full" defined as a ratio.
+- [x] Cited the method and justified the metric (user request). Added 4 bibitems (also
+      mirrored into context_fatigue.bib, 36 -> 40 entries, counts match):
+      vig2020mediation + meng2022rome for activation patching in causal-mediation form,
+      wang2023ioi for the logit-difference readout, zhang2024patching for the survey of
+      patching metrics. Two reasons given for choosing the log-prob difference here: it is
+      linear in the logits (a probability readout saturates), and it cancels shifts common to
+      both continuations - which matters because the deep code cell runs with the system span
+      CLOSED, depressing every well-formed reply at once. A single-format metric would read
+      that as an effect.
+
+Verified: 0 errors, 0 overfull, 0 undefined refs, 0 unresolved citations.
